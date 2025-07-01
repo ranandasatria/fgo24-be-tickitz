@@ -90,3 +90,7 @@ ADD payment_method INT REFERENCES payment_method(id);
 
 ALTER TABLE movie_casts
 ADD COLUMN role_name VARCHAR(255);
+
+ALTER TABLE users
+ALTER COLUMN full_name
+DROP NOT NULL;
