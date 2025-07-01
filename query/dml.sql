@@ -5,13 +5,6 @@ INSERT INTO users (email, password, full_name, phone_number, profile_picture) VA
 ('dina@example.com', 'pass4', 'Dina Kurnia', 628444444444, 'dina.jpg'),
 ('eko@example.com', 'pass5', 'Eko Prasetyo', 628555555555, 'eko.jpg');
 
-INSERT INTO sessions (id_user, login_time) VALUES
-(1, CURRENT_TIMESTAMP),
-(2, CURRENT_TIMESTAMP),
-(3, CURRENT_TIMESTAMP),
-(4, CURRENT_TIMESTAMP),
-(5, CURRENT_TIMESTAMP);
-
 INSERT INTO movies (title, description, release_date, duration_minutes, image, horizontal_image) VALUES
 ('Where is the Friend''s House?', 'A boy searches for his friend''s home to return a notebook.', '1987-03-20', 83, 'friend.jpg', 'friend-h.jpg'),
 ('Bicycle Thieves', 'A man and his son search for a stolen bicycle.', '1948-11-24', 89, 'bicycle.jpg', 'bicycle-h.jpg'),
@@ -91,3 +84,19 @@ INSERT INTO tickets (id_user, id_movie, show_date, show_time, cinema, location, 
 (2, 4, '2025-07-08', '18:30', 'Cinepolis', 'Bandung', 'B4', 65000, 3),
 (3, 5, '2025-07-09', '17:15', 'CGV', 'Surabaya', 'C5', 70000, 2),
 (4, 3, '2025-07-10', '19:45', 'XXI', 'Yogyakarta', 'D6', 60000, 4);
+
+ALTER TABLE sessions
+DROP CONSTRAINT sessions_id_user_fkey,
+ADD CONSTRAINT sessions_id_user_fkey
+FOREIGN KEY (id_user) REFERENCES users(id)
+ON DELETE CASCADE;
+
+ALTER TABLE tickets
+DROP CONSTRAINT tickets_id_user_fkey,
+ADD CONSTRAINT tickets_id_user_fkey
+FOREIGN KEY (id_user) REFERENCES users(id)
+ON DELETE CASCADE;
+
+
+DELETE FROM users
+WHERE password NOT LIKE '$2a$%';
