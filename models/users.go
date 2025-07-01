@@ -4,6 +4,8 @@ import (
 	"be-tickitz/utils"
 	"context"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type User struct {
@@ -11,9 +13,16 @@ type User struct {
 	Email          string `json:"email"`
 	Password       string `json:"password"`
 	FullName       string `json:"fullName" db:"full_name"`
-	PhoneNumber    string `json:"phoneNumber" db:"phone_number"`
-	ProfilePicture string `json:"profilePicture" db:"profile_picture"`
+	PhoneNumber    *string `json:"phoneNumber" db:"phone_number"`
+	ProfilePicture *string `json:"profilePicture" db:"profile_picture"`
 }
+
+type UserLogin struct {
+  ID       int    `db:"id"`
+  Email    string `db:"email"`
+  Password string `db:"password"`
+}
+
 
 func Register(user User) (User, error) {
 	conn, err := utils.ConnectDB()
@@ -45,4 +54,28 @@ func Register(user User) (User, error) {
 	user.Password = ""
 
 	return user, err
+}
+
+func FindOneUserByEmail(email string) (UserLogin, error) {
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return UserLogin{}, err
+  }
+  defer conn.Release()
+
+  rows, err := conn.Query(
+    context.Background(),
+    `
+    SELECT id, email, password
+    FROM users
+    WHERE email = $1
+    `,
+    email,
+  )
+  if err != nil {
+    return UserLogin{}, err
+  }
+
+  user, err := pgx.CollectOneRow[UserLogin](rows, pgx.RowToStructByName)
+  return user, err
 }
