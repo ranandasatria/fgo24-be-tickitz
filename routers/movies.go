@@ -11,3 +11,8 @@ func movieAdminRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.POST("", controllers.CreateMovie)
 }
+
+func moviePublicRouter(r *gin.RouterGroup) {
+	r.GET("", controllers.GetAllMovies)
+	r.GET("/:id", controllers.GetMovieByID)
+}

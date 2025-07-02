@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Movie struct {
@@ -43,6 +45,51 @@ func CreateMovie(input dto.Movie) (Movie, error) {
 		input.Image,
 		input.HorizontalImage,
 	).Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.Description,
+		&movie.ReleaseDate,
+		&movie.Duration,
+		&movie.Image,
+		&movie.HorizontalImage,
+	)
+
+	return movie, err
+}
+
+func GetAllMovies() ([]Movie, error) {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	rows, err := conn.Query(context.Background(), `
+		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+		FROM movies
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
+	return movies, err
+}
+
+func GetMovieByID(id string) (Movie, error) {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return Movie{}, err
+	}
+	defer conn.Release()
+
+	var movie Movie
+	err = conn.QueryRow(context.Background(), `
+		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+		FROM movies
+		WHERE id = $1
+	`, id).Scan(
 		&movie.ID,
 		&movie.Title,
 		&movie.Description,

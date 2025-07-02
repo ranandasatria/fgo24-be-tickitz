@@ -15,6 +15,7 @@ func CombineRouter(r *gin.Engine) {
 	forgotPasswordRouter(r.Group("/forgot-password"))
 	resetPasswordRouter(r.Group("/reset-password"))
 	movieAdminRouter(r.Group("/admin/movies"))
+	moviePublicRouter(r.Group("/movies"))
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/docs", func(ctx *gin.Context) {
