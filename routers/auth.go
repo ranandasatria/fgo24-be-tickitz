@@ -13,3 +13,7 @@ func registerRouter(r *gin.RouterGroup) {
 func loginRouter(r *gin.RouterGroup) {
 	r.POST("", controllers.Login)
 }
+
+func forgotPasswordRouter(r *gin.RouterGroup) {
+	r.POST("", controllers.ForgotPassword)
+}

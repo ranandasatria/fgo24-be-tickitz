@@ -5,12 +5,9 @@ import (
 	"be-tickitz/utils"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 )
 
 func Register(c *gin.Context) {
@@ -42,9 +39,6 @@ func Register(c *gin.Context) {
 }
 
 func Login(ctx *gin.Context) {
-	godotenv.Load()
-	secretKey := os.Getenv("APP_SECRET")
-
 	form := struct {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
@@ -77,13 +71,15 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": user.ID,
-		"iat":    time.Now().Unix(),
-		"exp":    time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	token, _ := generateToken.SignedString([]byte(secretKey))
+	token, err := utils.GenerateJWT("auth", user.ID, 24*time.Hour)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to generate token",
+			Errors:  err.Error(),
+		})
+		return
+	}
 
 	ctx.JSON(http.StatusOK, utils.Response{
 		Success: true,
@@ -91,5 +87,44 @@ func Login(ctx *gin.Context) {
 		Results: map[string]string{
 			"token": token,
 		},
+	})
+}
+
+func ForgotPassword(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid email format",
+		})
+		return
+	}
+
+	user, err := models.FindOneUserByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusNotFound, utils.Response{
+			Success: false,
+			Message: "Email not found",
+		})
+		return
+	}
+
+	token, err := utils.GenerateJWT("reset_password", user.ID, 10*time.Minute)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to generate token",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Reset token created",
+		Results: gin.H{"resetToken": token},
 	})
 }
