@@ -1,4 +1,4 @@
--- Active: 1751364923444@@127.0.0.1@5433@tontrix_db
+-- Active: 1751389626573@@127.0.0.1@5433@tontrix_db
 - USERS
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -7,13 +7,6 @@ CREATE TABLE users (
   full_name VARCHAR(255) NOT NULL,
   phone_number BIGINT,
   profile_picture VARCHAR(255)
-);
-
--- SESSIONS
-CREATE TABLE sessions (
-  id SERIAL PRIMARY KEY,
-  id_user INT REFERENCES users(id),
-  login_time TIMESTAMP
 );
 
 -- MOVIES
@@ -66,6 +59,12 @@ CREATE TABLE movie_casts (
   id_actor INT REFERENCES actors(id) ON DELETE CASCADE
 );
 
+-- PAYMENT METHOD
+CREATE TABLE payment_method (
+  id SERIAL PRIMARY KEY,
+  payment_name VARCHAR(255)
+);
+
 -- TICKETS
 CREATE TABLE tickets (
   id SERIAL PRIMARY KEY,
@@ -76,21 +75,6 @@ CREATE TABLE tickets (
   cinema VARCHAR(255),
   location VARCHAR(255),
   seat VARCHAR(255),
-  price_per_ticket INT
+  price_per_ticket INT,
+  payment_method INT REFERENCES payment_method(id)
 );
-
--- PAYMENT_METHOD
-CREATE TABLE payment_method (
-  id SERIAL PRIMARY KEY,
-  payment_name VARCHAR(255)
-);
-
-ALTER TABLE tickets
-ADD payment_method INT REFERENCES payment_method(id);
-
-ALTER TABLE movie_casts
-ADD COLUMN role_name VARCHAR(255);
-
-ALTER TABLE users
-ALTER COLUMN full_name
-DROP NOT NULL;
