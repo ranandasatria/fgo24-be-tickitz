@@ -21,7 +21,7 @@ users {
   varchar email
   varchar password
   varchar full_name
-  bigint phone_number
+  varchar phone_number
   varchar profile_picture
 }
 
