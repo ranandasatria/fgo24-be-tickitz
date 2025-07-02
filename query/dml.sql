@@ -101,6 +101,10 @@ ON DELETE CASCADE;
 DELETE FROM users
 WHERE password NOT LIKE '$2a$%';
 
-UPDATE users
-SET password = 'hashed_password'
-WHERE email = 'admin@mail.com';
+INSERT INTO users (email, password, full_name, role)
+VALUES (
+  'admin@mail.com',
+  '$2b$12$H7ds2ktfdWKiVWYM9TlkP.ZSZuPsq4N4l2T6GI7M01xUL/Lqn4wR.',
+  'Admin',
+  'admin'
+);
