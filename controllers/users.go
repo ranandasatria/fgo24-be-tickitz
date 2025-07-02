@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"be-tickitz/dto"
 	"be-tickitz/models"
 	"be-tickitz/utils"
 	"fmt"
@@ -17,20 +18,25 @@ import (
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body models.User true "User data"
+// @Param request body dto.AuthRegisterLogin true "User data"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /register [post]
 func Register(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var input dto.AuthRegisterLogin
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, utils.Response{
 			Success: false,
 			Message: "Invalid request",
 			Errors:  err.Error(),
 		})
 		return
+	}
+
+	user := models.User{
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
 	createdUser, err := models.Register(user)
@@ -56,17 +62,14 @@ func Register(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body object{email=string,password=string} true "Login data"
+// @Param request body dto.AuthRegisterLogin true "Login data"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /login [post]
 func Login(ctx *gin.Context) {
-	form := struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}{}
+	var form dto.AuthRegisterLogin
 
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.Response{
@@ -116,18 +119,18 @@ func Login(ctx *gin.Context) {
 	})
 }
 
-// Login godoc
-// @Summary Login user
-// @Description Authenticate user and return JWT token
+// ForgotPassword godoc
+// @Summary Send password reset token
+// @Description Send reset token to user's email if email is valid
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body object{email=string,password=string} true "Login data"
+// @Param request body object{email=string} true "User email"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
+// @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /login [post]
+// @Router /forgot-password [post]
 func ForgotPassword(c *gin.Context) {
 	var req struct {
 		Email string `json:"email" binding:"required,email"`

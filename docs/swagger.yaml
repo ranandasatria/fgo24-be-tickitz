@@ -1,21 +1,14 @@
 basePath: /
 definitions:
-  models.User:
+  dto.AuthRegisterLogin:
     properties:
       email:
         type: string
-      fullName:
-        type: string
-      idUser:
-        type: integer
       password:
         type: string
-      phoneNumber:
-        type: string
-      profilePicture:
-        type: string
-      role:
-        type: string
+    required:
+    - email
+    - password
     type: object
   utils.Response:
     properties:
@@ -33,6 +26,43 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
+  /forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send reset token to user's email if email is valid
+      parameters:
+      - description: User email
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Send password reset token
+      tags:
+      - Auth
   /login:
     post:
       consumes:
@@ -44,12 +74,7 @@ paths:
         name: request
         required: true
         schema:
-          properties:
-            email:
-              type: string
-            password:
-              type: string
-          type: object
+          $ref: '#/definitions/dto.AuthRegisterLogin'
       produces:
       - application/json
       responses:
@@ -83,7 +108,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/dto.AuthRegisterLogin'
       produces:
       - application/json
       responses:
