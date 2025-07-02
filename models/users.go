@@ -78,3 +78,23 @@ func FindOneUserByEmail(email string) (UserLogin, error) {
 	user, err := pgx.CollectOneRow[UserLogin](rows, pgx.RowToStructByName)
 	return user, err
 }
+
+func UpdateUserPassword(userID int, newPassword string) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	hashedPassword, err := utils.HashString(newPassword)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(context.Background(),
+		`UPDATE users SET password = $1 WHERE id = $2`,
+		hashedPassword, userID,
+	)
+
+	return err
+}

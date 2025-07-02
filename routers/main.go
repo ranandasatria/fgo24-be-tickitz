@@ -6,4 +6,5 @@ func CombineRouter(r *gin.Engine) {
 	registerRouter(r.Group("/register"))
 	loginRouter(r.Group("/login"))
 	forgotPasswordRouter(r.Group("/forgot-password"))
+	resetPasswordRouter(r.Group("/reset-password"))	
 }

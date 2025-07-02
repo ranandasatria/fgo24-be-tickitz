@@ -3,6 +3,7 @@ package controllers
 import (
 	"be-tickitz/models"
 	"be-tickitz/utils"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -122,9 +123,79 @@ func ForgotPassword(c *gin.Context) {
 		return
 	}
 
+	body := fmt.Sprintf("<p>Copy to this token to reset your password:</p><code>%s</code>", token)
+
+	err = utils.SendEmail(req.Email, "Reset Your Password", body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to send email",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
-		Message: "Reset token created",
-		Results: gin.H{"resetToken": token},
+		Message: "Reset token sent to your email",
+	})
+}
+
+func ResetPassword(c *gin.Context) {
+	var req struct {
+		Token       string `json:"token" binding:"required"`
+		NewPassword string `json:"newPassword" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid request body",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	claims, err := utils.ParseJWT(req.Token)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid or expired token",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	purpose, ok := claims["purpose"].(string)
+	if !ok || purpose != "reset_password" {
+		c.JSON(http.StatusUnauthorized, utils.Response{
+			Success: false,
+			Message: "Invalid token purpose",
+		})
+		return
+	}
+
+	userID, ok := claims["userId"].(float64) 
+	if !ok {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid token payload",
+		})
+		return
+	}
+
+	err = models.UpdateUserPassword(int(userID), req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to update password",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Password updated successfully",
 	})
 }

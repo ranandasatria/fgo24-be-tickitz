@@ -17,3 +17,7 @@ func loginRouter(r *gin.RouterGroup) {
 func forgotPasswordRouter(r *gin.RouterGroup) {
 	r.POST("", controllers.ForgotPassword)
 }
+
+func resetPasswordRouter(r *gin.RouterGroup) {
+	r.POST("", controllers.ResetPassword)
+}
