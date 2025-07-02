@@ -11,6 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body models.User true "User data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /register [post]
 func Register(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -39,6 +50,18 @@ func Register(c *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Authenticate user and return JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body object{email=string,password=string} true "Login data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /login [post]
 func Login(ctx *gin.Context) {
 	form := struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -93,6 +116,18 @@ func Login(ctx *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Authenticate user and return JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body object{email=string,password=string} true "Login data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /login [post]
 func ForgotPassword(c *gin.Context) {
 	var req struct {
 		Email string `json:"email" binding:"required,email"`
@@ -143,6 +178,18 @@ func ForgotPassword(c *gin.Context) {
 	})
 }
 
+// ResetPassword godoc
+// @Summary Reset user password
+// @Description Reset password using valid reset token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body object{token=string,newPassword=string} true "Reset password data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /reset-password [post]
 func ResetPassword(c *gin.Context) {
 	var req struct {
 		Token       string `json:"token" binding:"required"`

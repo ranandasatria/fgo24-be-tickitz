@@ -10,6 +10,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title Be-Tickitz API
+// @version 1.0
+// @description This is a simple movie ticketing API
+// @host localhost:8888
+// @BasePath /
 func main() {
 	r := gin.Default()
 
