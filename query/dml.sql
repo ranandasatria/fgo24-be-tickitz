@@ -100,3 +100,7 @@ ON DELETE CASCADE;
 
 DELETE FROM users
 WHERE password NOT LIKE '$2a$%';
+
+UPDATE users
+SET password = 'hashed_password'
+WHERE email = 'admin@mail.com';

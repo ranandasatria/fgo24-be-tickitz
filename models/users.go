@@ -15,12 +15,14 @@ type User struct {
 	FullName       string  `json:"fullName" db:"full_name"`
 	PhoneNumber    *string `json:"phoneNumber" db:"phone_number"`
 	ProfilePicture *string `json:"profilePicture" db:"profile_picture"`
+	Role           string  `json:"role" db:"role"`
 }
 
 type UserLogin struct {
 	ID       int    `db:"id"`
 	Email    string `db:"email"`
 	Password string `db:"password"`
+	Role     string `db:"role"`
 }
 
 func Register(user User) (User, error) {
@@ -34,6 +36,10 @@ func Register(user User) (User, error) {
 		user.FullName = utils.ExtractNameFromEmail(user.Email)
 	}
 
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
 	hashedPassword, err := utils.HashString(user.Password)
 	if err != nil {
 		return user, err
@@ -43,12 +49,12 @@ func Register(user User) (User, error) {
 	err = conn.QueryRow(
 		context.Background(),
 		`
-		INSERT INTO users (email, password, full_name)
-		VALUES ($1, $2, $3)
-		RETURNING id, email, full_name
+		INSERT INTO users (email, password, full_name, role)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, email, full_name, role
 		`,
-		user.Email, user.Password, user.FullName,
-	).Scan(&user.ID, &user.Email, &user.FullName)
+		user.Email, user.Password, user.FullName, user.Role,
+	).Scan(&user.ID, &user.Email, &user.FullName, &user.Role)
 
 	user.Password = ""
 
@@ -65,7 +71,7 @@ func FindOneUserByEmail(email string) (UserLogin, error) {
 	rows, err := conn.Query(
 		context.Background(),
 		`
-    SELECT id, email, password
+    SELECT id, email, password, role
     FROM users
     WHERE email = $1
     `,

@@ -72,7 +72,9 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT("auth", user.ID, 24*time.Hour)
+	token, err := utils.GenerateJWT("auth", user.ID, 24*time.Hour, map[string]any{
+		"role": user.Role,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
@@ -113,7 +115,7 @@ func ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT("reset_password", user.ID, 10*time.Minute)
+	token, err := utils.GenerateJWT("reset_password", user.ID, 10*time.Minute, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
@@ -175,7 +177,7 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	userID, ok := claims["userId"].(float64) 
+	userID, ok := claims["userId"].(float64)
 	if !ok {
 		c.JSON(http.StatusBadRequest, utils.Response{
 			Success: false,
