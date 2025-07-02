@@ -9,18 +9,23 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func GenerateJWT(purpose string, userId int, expiry time.Duration) (string, error) {
-	godotenv.Load()
-	secret := os.Getenv("APP_SECRET")
+func GenerateJWT(purpose string, userId int, expiry time.Duration, extraClaims map[string]any) (string, error) {
+  godotenv.Load()
+  secret := os.Getenv("APP_SECRET")
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":  userId,
-		"purpose": purpose,
-		"exp":     time.Now().Add(expiry).Unix(),
-		"iat":     time.Now().Unix(),
-	})
+  claims := jwt.MapClaims{
+    "userId":  userId,
+    "purpose": purpose,
+    "exp":     time.Now().Add(expiry).Unix(),
+    "iat":     time.Now().Unix(),
+  }
 
-	return token.SignedString([]byte(secret))
+  for k, v := range extraClaims {
+    claims[k] = v
+  }
+
+  token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+  return token.SignedString([]byte(secret))
 }
 
 func ParseJWT(tokenStr string) (jwt.MapClaims, error) {
