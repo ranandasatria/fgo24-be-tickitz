@@ -10,6 +10,7 @@ import (
 func movieAdminRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.POST("", controllers.CreateMovie)
+	r.POST("/add-genre", controllers.AddGenretoMovie)
 }
 
 func moviePublicRouter(r *gin.RouterGroup) {
