@@ -4,6 +4,8 @@ import (
 	"be-tickitz/dto"
 	"be-tickitz/utils"
 	"context"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Genre struct {
@@ -34,7 +36,7 @@ func CreateGenre(input dto.Genre) (Genre, error) {
 
 }
 
-func AddGenretoMovie(movieID, genreID int) error {
+func AddGenretoMovie(movieID, genreID int) error { //add genre ke movie secara manual melalui hit API
 	conn, err := utils.ConnectDB()
 	if err != nil {
 		return err
@@ -48,4 +50,26 @@ func AddGenretoMovie(movieID, genreID int) error {
 	movieID, genreID,
 	)
 return err
+}
+
+func GetAllGenres() ([]Genre, error){
+		conn, err := utils.ConnectDB()
+	if err != nil {
+		return []Genre{}, err
+	}
+	defer conn.Release()
+
+	
+	rows, err := conn.Query(context.Background(), `
+		SELECT id, genre_name
+		FROM genres
+		ORDER BY genre_name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	genre,err := pgx.CollectRows(rows, pgx.RowToStructByName[Genre])
+
+	return genre, err
 }

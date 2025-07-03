@@ -86,3 +86,21 @@ func AddGenretoMovie(c *gin.Context) {
 	})
 
 }
+
+func GetAllGenres(c *gin.Context){
+	genres, err := models.GetAllGenres()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to fetch genres",
+			Errors: err.Error(),
+		})
+		return
+	}
+	
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "All genres",
+		Results: genres,
+	})
+}
