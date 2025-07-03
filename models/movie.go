@@ -124,3 +124,24 @@ func GetNowShowing() ([]Movie, error) {
 	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
 	return movies, err
 }
+
+func GetUpcoming() ([]dto.MovieUpcoming, error) {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	rows, err := conn.Query(context.Background(), `
+	SELECT title, release_date, image
+	FROM movies
+	WHERE release_date > CURRENT_DATE
+	ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.MovieUpcoming])
+	return movies, err
+}

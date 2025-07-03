@@ -4,6 +4,7 @@ import (
 	"be-tickitz/dto"
 	"be-tickitz/models"
 	"be-tickitz/utils"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -101,6 +102,25 @@ func GetNowShowing(c *gin.Context){
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Now showing",
+		Results: movies,
+	})
+}
+
+func GetUpcoming(c *gin.Context){
+	movies, err := models.GetUpcoming()
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to fetch movies",
+			Errors: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Upcoming movies",
 		Results: movies,
 	})
 }
