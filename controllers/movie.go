@@ -43,10 +43,22 @@ func CreateMovie(c *gin.Context) {
 		return
 	}
 
+	
+
+	response := dto.MovieResponse{
+  ID:              created.ID,
+  Title:           created.Title,
+  Description:     created.Description,
+  ReleaseDate:     created.ReleaseDate,
+  Duration:        created.Duration,
+  Image:           created.Image,
+  HorizontalImage: created.HorizontalImage,
+  GenreIDs:        movie.GenreIDs,
+}
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Movie created successfully",
-		Results: created,
+		Results: response,
 	})
 }
 

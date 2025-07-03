@@ -27,13 +27,20 @@ func CreateMovie(input dto.Movie) (Movie, error) {
 	}
 	defer conn.Release()
 
+	tx, err := conn.Begin(context.Background())
+	if err != nil {
+		return Movie{}, err
+	}
+
+	defer tx.Rollback(context.Background())
+
 	parsedDate, err := time.Parse("2006-01-02", input.ReleaseDate)
 	if err != nil {
 		return Movie{}, fmt.Errorf("invalid release date format: %v", err)
 	}
 
 	var movie Movie
-	err = conn.QueryRow(context.Background(), `
+	err = tx.QueryRow(context.Background(), `
 		INSERT INTO movies (title, description, release_date, duration_minutes, image, horizontal_image)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, title, description, release_date, duration_minutes, image, horizontal_image
@@ -53,8 +60,25 @@ func CreateMovie(input dto.Movie) (Movie, error) {
 		&movie.Image,
 		&movie.HorizontalImage,
 	)
+	if err != nil{
+		return Movie{}, err
+	}
 
-	return movie, err
+	for _, genreID := range input.GenreIDs {
+		_, err := tx.Exec(context.Background(), `
+		INSERT INTO movie_genres (id_movie, id_genre)
+		VALUES ($1, $2)
+		`, movie.ID, genreID)
+
+		if err != nil {
+			fmt.Printf("Insert genre failed: %v\n", err)
+			return Movie{}, fmt.Errorf("failed to insert genre: %v", err)
+		}
+	}
+	if err := tx.Commit(context.Background()); err != nil {
+  return Movie{}, fmt.Errorf("failed to commit transaction: %v", err)
+	}
+	return movie, nil
 }
 
 func GetAllMovies() ([]Movie, error) {
