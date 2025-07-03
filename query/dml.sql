@@ -7,7 +7,7 @@ INSERT INTO users (email, password, full_name, phone_number, profile_picture) VA
 
 INSERT INTO movies (title, description, release_date, duration_minutes, image, horizontal_image) VALUES
 ('Where is the Friend''s House?', 'A boy searches for his friend''s home to return a notebook.', '1987-03-20', 83, 'friend.jpg', 'friend-h.jpg'),
-('Bicycle Thieves', 'A man and his son search for a stolen bicycle.', '1948-11-24', 89, 'bicycle.jpg', 'bicycle-h.jpg'),
+('Bicycle Thieves', 'A man and his son search for a stolen bicycle.', 'air', 89, 'bicycle.jpg', 'bicycle-h.jpg'),
 ('High and Low', 'A businessman is involved in a kidnapping case.', '1963-06-23', 143, 'highlow.jpg', 'highlow-h.jpg'),
 ('Paris, Texas', 'A man reconnects with his son after years of disappearance.', '1984-05-19', 147, 'paris.jpg', 'paris-h.jpg'),
 ('A Woman Under the Influence', 'A woman struggles with mental health and family.', '1974-11-18', 155, 'woman.jpg', 'woman-h.jpg');
@@ -104,7 +104,7 @@ WHERE password NOT LIKE '$2a$%';
 INSERT INTO users (email, password, full_name, role)
 VALUES (
   'admin@mail.com',
-  '$2b$12$H7ds2ktfdWKiVWYM9TlkP.ZSZuPsq4N4l2T6GI7M01xUL/Lqn4wR.',
+  '',
   'Admin',
   'admin'
 );

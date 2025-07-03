@@ -62,7 +62,7 @@ func GetAllMovies(c *gin.Context) {
 
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
-		Message: "Movies fetched successfully",
+		Message: "All movies",
 		Results: movies,
 	})
 }
@@ -82,7 +82,25 @@ func GetMovieByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
-		Message: "Movie details fetched successfully",
+		Message: "Movie details",
 		Results: movie,
+	})
+}
+
+func GetNowShowing(c *gin.Context){
+	movies, err := models.GetNowShowing()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to fetch movies",
+			Errors: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Now showing",
+		Results: movies,
 	})
 }

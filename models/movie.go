@@ -101,3 +101,26 @@ func GetMovieByID(id string) (Movie, error) {
 
 	return movie, err
 }
+
+
+func GetNowShowing() ([]Movie, error) {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	
+	rows, err := conn.Query(context.Background(), `
+		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+		FROM movies
+		WHERE release_date < CURRENT_DATE
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
+	return movies, err
+}
