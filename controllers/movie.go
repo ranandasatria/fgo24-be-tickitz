@@ -136,3 +136,20 @@ func GetUpcoming(c *gin.Context){
 		Results: movies,
 	})
 }
+
+func DeleteMovie(c *gin.Context) {
+  claims := c.MustGet("user").(jwt.MapClaims)
+  if role, ok := claims["role"].(string); !ok || role != "admin" {
+    c.JSON(http.StatusForbidden, utils.Response{Success: false, Message: "Only admin can delete movies"})
+    return
+  }
+
+  id := c.Param("id")
+  err := models.DeleteMovie(id)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, utils.Response{Success: false, Message: "Failed to delete movie", Errors: err.Error()})
+    return
+  }
+
+  c.JSON(http.StatusOK, utils.Response{Success: true, Message: "Movie deleted"})
+}

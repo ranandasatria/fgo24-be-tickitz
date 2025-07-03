@@ -11,6 +11,7 @@ func movieAdminRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.POST("", controllers.CreateMovie)
 	r.POST("/add-genre", controllers.AddGenretoMovie)
+	r.DELETE("/:id", controllers.DeleteMovie)
 }
 
 func moviePublicRouter(r *gin.RouterGroup) {

@@ -169,3 +169,14 @@ func GetUpcoming() ([]dto.MovieUpcoming, error) {
 	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.MovieUpcoming])
 	return movies, err
 }
+
+func DeleteMovie(id string) error {
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return err
+  }
+  defer conn.Release()
+
+  _, err = conn.Exec(context.Background(), `DELETE FROM movies WHERE id = $1`, id)
+  return err
+}
