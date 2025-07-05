@@ -53,7 +53,10 @@ func CreateMovie(c *gin.Context) {
 		Image:           created.Image,
 		HorizontalImage: created.HorizontalImage,
 		GenreIDs:        movie.GenreIDs,
+		DirectorIDs:     movie.DirectorIDs,
+		CastIDs:        movie.CastIDs,
 	}
+
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Movie created successfully",

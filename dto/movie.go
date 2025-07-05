@@ -23,6 +23,8 @@ type MovieResponse struct {
 	Image           string    `json:"image"`
 	HorizontalImage string    `json:"horizontalImage"`
 	GenreIDs        []int     `json:"genreIDs"`
+	DirectorIDs     []int     `json:"directorIDs"`
+	CastIDs         []int     `json:"castIDs"`
 }
 
 type MovieUpcoming struct {

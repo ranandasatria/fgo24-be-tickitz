@@ -21,65 +21,89 @@ type Movie struct {
 }
 
 func CreateMovie(input dto.Movie) (Movie, error) {
-	conn, err := utils.ConnectDB()
-	if err != nil {
-		return Movie{}, err
-	}
-	defer conn.Release()
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return Movie{}, err
+  }
+  defer conn.Release()
 
-	tx, err := conn.Begin(context.Background())
-	if err != nil {
-		return Movie{}, err
-	}
+  tx, err := conn.Begin(context.Background())
+  if err != nil {
+    return Movie{}, err
+  }
+  defer tx.Rollback(context.Background())
 
-	defer tx.Rollback(context.Background())
+  parsedDate, err := time.Parse("2006-01-02", input.ReleaseDate)
+  if err != nil {
+    return Movie{}, fmt.Errorf("invalid release date format: %v", err)
+  }
 
-	parsedDate, err := time.Parse("2006-01-02", input.ReleaseDate)
-	if err != nil {
-		return Movie{}, fmt.Errorf("invalid release date format: %v", err)
-	}
+  var movie Movie
+  err = tx.QueryRow(context.Background(), `
+    INSERT INTO movies (title, description, release_date, duration_minutes, image, horizontal_image)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, title, description, release_date, duration_minutes, image, horizontal_image
+  `,
+    input.Title,
+    input.Description,
+    parsedDate,
+    input.Duration,
+    input.Image,
+    input.HorizontalImage,
+  ).Scan(
+    &movie.ID,
+    &movie.Title,
+    &movie.Description,
+    &movie.ReleaseDate,
+    &movie.Duration,
+    &movie.Image,
+    &movie.HorizontalImage,
+  )
+  if err != nil {
+    return Movie{}, err
+  }
 
-	var movie Movie
-	err = tx.QueryRow(context.Background(), `
-		INSERT INTO movies (title, description, release_date, duration_minutes, image, horizontal_image)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, title, description, release_date, duration_minutes, image, horizontal_image
-	`,
-		input.Title,
-		input.Description,
-		parsedDate,
-		input.Duration,
-		input.Image,
-		input.HorizontalImage,
-	).Scan(
-		&movie.ID,
-		&movie.Title,
-		&movie.Description,
-		&movie.ReleaseDate,
-		&movie.Duration,
-		&movie.Image,
-		&movie.HorizontalImage,
-	)
-	if err != nil {
-		return Movie{}, err
-	}
+  // insert genre IDs
+  for _, genreID := range input.GenreIDs {
+    _, err := tx.Exec(context.Background(), `
+      INSERT INTO movie_genres (id_movie, id_genre)
+      VALUES ($1, $2)
+    `, movie.ID, genreID)
 
-	for _, genreID := range input.GenreIDs {
-		_, err := tx.Exec(context.Background(), `
-		INSERT INTO movie_genres (id_movie, id_genre)
-		VALUES ($1, $2)
-		`, movie.ID, genreID)
+    if err != nil {
+      return Movie{}, fmt.Errorf("failed to insert genre: %v", err)
+    }
+  }
 
-		if err != nil {
-			fmt.Printf("Insert genre failed: %v\n", err)
-			return Movie{}, fmt.Errorf("failed to insert genre: %v", err)
-		}
-	}
-	if err := tx.Commit(context.Background()); err != nil {
-		return Movie{}, fmt.Errorf("failed to commit transaction: %v", err)
-	}
-	return movie, nil
+  // insert director IDs
+  for _, directorID := range input.DirectorIDs {
+    _, err := tx.Exec(context.Background(), `
+      INSERT INTO movie_directors (id_movie, id_director)
+      VALUES ($1, $2)
+    `, movie.ID, directorID)
+    if err != nil {
+      return Movie{}, fmt.Errorf("failed to insert director: %v", err)
+    }
+  }
+
+  // insert cast IDs
+  for _, actorID := range input.CastIDs {
+    _, err := tx.Exec(context.Background(), `
+      INSERT INTO movie_casts (id_movie, id_actor)
+      VALUES ($1, $2)
+    `, movie.ID, actorID)
+    if err != nil {
+      return Movie{}, fmt.Errorf("failed to insert cast: %v", err)
+    }
+  }
+
+  if err := tx.Commit(context.Background()); err != nil {
+    return Movie{}, fmt.Errorf("failed to commit transaction: %v", err)
+  }
+
+  return movie, nil
 }
+
 
 func GetAllMovies() ([]Movie, error) {
 	conn, err := utils.ConnectDB()
