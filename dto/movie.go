@@ -34,13 +34,14 @@ type MovieUpcoming struct {
 }
 
 type UpdateMovieInput struct {
-	Title           *string    `json:"title"`
-	Description     *string    `json:"description"`
-	ReleaseDate     *time.Time `json:"releaseDate"`
-	Duration        *int       `json:"duration"`
-	Image           *string    `json:"image"`
-	HorizontalImage *string    `json:"horizontalImage"`
-	GenreIDs        *[]int     `json:"genreIDs"`
-	DirectorIDs     *[]int     `json:"directorIDs"`
-	CastIDs         *[]int     `json:"castIDs"`
+  Title           *string   `json:"title"`
+  Description     *string   `json:"description"`
+  ReleaseDate     *time.Time `json:"releaseDate"`
+  Duration        *int      `json:"duration"`
+  Image           *string   `json:"image"`
+  HorizontalImage *string   `json:"horizontalImage"`
+  GenreIDs        *[]int    `json:"genreIDs"`
+  DirectorIDs     *[]int    `json:"directorIDs"`
+  CastIDs         *[]int    `json:"castIDs"`
 }
+
