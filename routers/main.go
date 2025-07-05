@@ -18,6 +18,7 @@ func CombineRouter(r *gin.Engine) {
 	moviePublicRouter(r.Group("/movies"))
 	genreAdminRouter(r.Group("/admin/genres"))
 	genrePublicRouter(r.Group("/genres"))
+	adminPaymentMethod(r.Group("/admin/payment-method"))
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/docs", func(ctx *gin.Context) {
