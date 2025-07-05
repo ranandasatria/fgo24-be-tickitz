@@ -275,8 +275,7 @@ func UpdateMovie(id int, input dto.UpdateMovieInput) error {
   if err != nil {
     return err
   }
-
-  // Update genres
+	
   if input.GenreIDs != nil {
     _, err := tx.Exec(context.Background(), `DELETE FROM movie_genres WHERE id_movie = $1`, id)
     if err != nil {
@@ -293,7 +292,6 @@ func UpdateMovie(id int, input dto.UpdateMovieInput) error {
     }
   }
 
-  // Update directors
   if input.DirectorIDs != nil {
     _, err := tx.Exec(context.Background(), `DELETE FROM movie_directors WHERE id_movie = $1`, id)
     if err != nil {
