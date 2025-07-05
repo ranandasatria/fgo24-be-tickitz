@@ -6,6 +6,7 @@ import (
 	"be-tickitz/utils"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -43,18 +44,16 @@ func CreateMovie(c *gin.Context) {
 		return
 	}
 
-	
-
 	response := dto.MovieResponse{
-  ID:              created.ID,
-  Title:           created.Title,
-  Description:     created.Description,
-  ReleaseDate:     created.ReleaseDate,
-  Duration:        created.Duration,
-  Image:           created.Image,
-  HorizontalImage: created.HorizontalImage,
-  GenreIDs:        movie.GenreIDs,
-}
+		ID:              created.ID,
+		Title:           created.Title,
+		Description:     created.Description,
+		ReleaseDate:     created.ReleaseDate,
+		Duration:        created.Duration,
+		Image:           created.Image,
+		HorizontalImage: created.HorizontalImage,
+		GenreIDs:        movie.GenreIDs,
+	}
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Movie created successfully",
@@ -100,13 +99,13 @@ func GetMovieByID(c *gin.Context) {
 	})
 }
 
-func GetNowShowing(c *gin.Context){
+func GetNowShowing(c *gin.Context) {
 	movies, err := models.GetNowShowing()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
 			Message: "Failed to fetch movies",
-			Errors: err.Error(),
+			Errors:  err.Error(),
 		})
 		return
 	}
@@ -118,14 +117,14 @@ func GetNowShowing(c *gin.Context){
 	})
 }
 
-func GetUpcoming(c *gin.Context){
+func GetUpcoming(c *gin.Context) {
 	movies, err := models.GetUpcoming()
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
 			Message: "Failed to fetch movies",
-			Errors: err.Error(),
+			Errors:  err.Error(),
 		})
 		return
 	}
@@ -138,18 +137,56 @@ func GetUpcoming(c *gin.Context){
 }
 
 func DeleteMovie(c *gin.Context) {
-  claims := c.MustGet("user").(jwt.MapClaims)
-  if role, ok := claims["role"].(string); !ok || role != "admin" {
-    c.JSON(http.StatusForbidden, utils.Response{Success: false, Message: "Only admin can delete movies"})
-    return
-  }
+	claims := c.MustGet("user").(jwt.MapClaims)
+	if role, ok := claims["role"].(string); !ok || role != "admin" {
+		c.JSON(http.StatusForbidden, utils.Response{Success: false, Message: "Only admin can delete movies"})
+		return
+	}
 
-  id := c.Param("id")
-  err := models.DeleteMovie(id)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, utils.Response{Success: false, Message: "Failed to delete movie", Errors: err.Error()})
-    return
-  }
+	id := c.Param("id")
+	err := models.DeleteMovie(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{Success: false, Message: "Failed to delete movie", Errors: err.Error()})
+		return
+	}
 
-  c.JSON(http.StatusOK, utils.Response{Success: true, Message: "Movie deleted"})
+	c.JSON(http.StatusOK, utils.Response{Success: true, Message: "Movie deleted"})
+}
+
+func UpdateMovie(c *gin.Context) {
+	claims := c.MustGet("user").(jwt.MapClaims)
+	role, _ := claims["role"].(string)
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, utils.Response{
+			Success: false,
+			Message: "Only admin can update movie",
+		})
+		return
+	}
+
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var input dto.UpdateMovieInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid input",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	if err := models.UpdateMovie(id, input); err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to update movie",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Movie updated successfully",
+	})
 }

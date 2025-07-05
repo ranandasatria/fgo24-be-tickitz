@@ -12,6 +12,7 @@ func movieAdminRouter(r *gin.RouterGroup) {
 	r.POST("", controllers.CreateMovie)
 	r.POST("/add-genre", controllers.AddGenretoMovie)
 	r.DELETE("/:id", controllers.DeleteMovie)
+	r.PATCH("/:id", controllers.UpdateMovie)
 }
 
 func moviePublicRouter(r *gin.RouterGroup) {
