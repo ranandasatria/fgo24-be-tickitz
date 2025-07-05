@@ -80,7 +80,6 @@ movie_casts {
   varchar id PK
   varchar id_movie FK
   varchar id_actor FK
-  varchar role_name
   timestamp created_at
   timestamp updated_at
 }
