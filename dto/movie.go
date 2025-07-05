@@ -14,6 +14,20 @@ type Movie struct {
 	CastIDs         []int  `json:"castIDs"`
 }
 
+type MovieDetail struct {
+  ID              int       `json:"id"`
+  Title           string    `json:"title"`
+  Description     string    `json:"description"`
+  ReleaseDate     time.Time `json:"releaseDate"`
+  Duration        int       `json:"durationMinutes"`
+  Image           string    `json:"image"`
+  HorizontalImage string    `json:"horizontalImage"`
+  Genres          []string  `json:"genres"`
+  Directors       []string  `json:"directors"`
+  Casts           []string  `json:"casts"`
+}
+
+
 type MovieResponse struct {
 	ID              int       `json:"id"`
 	Title           string    `json:"title"`

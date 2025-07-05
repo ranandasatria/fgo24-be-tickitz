@@ -62,8 +62,7 @@ func CreateMovie(input dto.Movie) (Movie, error) {
   if err != nil {
     return Movie{}, err
   }
-
-  // insert genre IDs
+	
   for _, genreID := range input.GenreIDs {
     _, err := tx.Exec(context.Background(), `
       INSERT INTO movie_genres (id_movie, id_genre)
@@ -123,14 +122,14 @@ func GetAllMovies() ([]Movie, error) {
 	return movies, err
 }
 
-func GetMovieByID(id string) (Movie, error) {
+func GetMovieByID(id string) (dto.MovieDetail, error) {
 	conn, err := utils.ConnectDB()
 	if err != nil {
-		return Movie{}, err
+		return dto.MovieDetail{}, err
 	}
 	defer conn.Release()
 
-	var movie Movie
+	var movie dto.MovieDetail
 	err = conn.QueryRow(context.Background(), `
 		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
 		FROM movies
@@ -144,9 +143,59 @@ func GetMovieByID(id string) (Movie, error) {
 		&movie.Image,
 		&movie.HorizontalImage,
 	)
+	if err != nil {
+		return dto.MovieDetail{}, err
+	}
 
-	return movie, err
+	rows, err := conn.Query(context.Background(), `
+		SELECT g.genre_name
+		FROM genres g
+		JOIN movie_genres mg ON g.id = mg.id_genre
+		WHERE mg.id_movie = $1
+	`, id)
+	if err == nil {
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err == nil {
+				movie.Genres = append(movie.Genres, name)
+			}
+		}
+	}
+
+	rows, err = conn.Query(context.Background(), `
+		SELECT d.director_name
+		FROM directors d
+		JOIN movie_directors md ON d.id = md.id_director
+		WHERE md.id_movie = $1
+	`, id)
+	if err == nil {
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err == nil {
+				movie.Directors = append(movie.Directors, name)
+			}
+		}
+	}
+
+	rows, err = conn.Query(context.Background(), `
+		SELECT a.actor_name
+		FROM actors a
+		JOIN movie_casts mc ON a.id = mc.id_actor
+		WHERE mc.id_movie = $1
+	`, id)
+	if err == nil {
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err == nil {
+				movie.Casts = append(movie.Casts, name)
+			}
+		}
+	}
+
+	return movie, nil
 }
+
+
 
 func GetNowShowing() ([]Movie, error) {
 	conn, err := utils.ConnectDB()
@@ -275,7 +324,7 @@ func UpdateMovie(id int, input dto.UpdateMovieInput) error {
   if err != nil {
     return err
   }
-	
+
   if input.GenreIDs != nil {
     _, err := tx.Exec(context.Background(), `DELETE FROM movie_genres WHERE id_movie = $1`, id)
     if err != nil {
