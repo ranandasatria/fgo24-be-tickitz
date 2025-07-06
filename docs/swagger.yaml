@@ -31,6 +31,11 @@ definitions:
       show_time:
         type: string
     type: object
+  dto.Genre:
+    properties:
+      genreName:
+        type: string
+    type: object
   dto.Movie:
     properties:
       ReleaseDate:
@@ -101,6 +106,71 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
+  /admin/genres:
+    post:
+      consumes:
+      - application/json
+      description: Admin only. Add a new genre
+      parameters:
+      - description: Genre name
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Genre'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create genre
+      tags:
+      - Genres
+  /admin/genres/{id}:
+    delete:
+      description: Admin only. Delete a genre by ID
+      parameters:
+      - description: Genre ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a genre
+      tags:
+      - Genres
   /admin/movies:
     post:
       consumes:
@@ -136,7 +206,7 @@ paths:
       - BearerAuth: []
       summary: Create new movie
       tags:
-      - Movies (Admin)
+      - Movies
   /admin/movies/{id}:
     delete:
       description: Admin only. Delete a movie by ID
@@ -165,7 +235,7 @@ paths:
       - BearerAuth: []
       summary: Delete a movie
       tags:
-      - Movies (Admin)
+      - Movies
     patch:
       consumes:
       - application/json
@@ -205,7 +275,7 @@ paths:
       - BearerAuth: []
       summary: Update a movie
       tags:
-      - Movies (Admin)
+      - Movies
   /forgot-password:
     post:
       consumes:
@@ -243,6 +313,23 @@ paths:
       summary: Send password reset token
       tags:
       - Auth
+  /genres:
+    get:
+      description: Retrieve all available genres
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get all genres
+      tags:
+      - Genres
   /login:
     post:
       consumes:
@@ -293,7 +380,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: Get all movies
       tags:
-      - Movies (Public)
+      - Movies
   /movies/{id}:
     get:
       description: Retrieve movie details by its ID
@@ -316,7 +403,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: Get movie by ID
       tags:
-      - Movies (Public)
+      - Movies
   /movies/now-showing:
     get:
       description: Retrieve list of currently showing movies
@@ -333,7 +420,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: Get now showing movies
       tags:
-      - Movies (Public)
+      - Movies
   /movies/upcoming:
     get:
       description: Retrieve list of upcoming movies
@@ -350,7 +437,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: Get upcoming movies
       tags:
-      - Movies (Public)
+      - Movies
   /register:
     post:
       consumes:

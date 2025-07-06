@@ -15,7 +15,7 @@ import (
 // CreateMovie godoc
 // @Summary Create new movie
 // @Description Admin only. Add a new movie with metadata and relations
-// @Tags Movies (Admin)
+// @Tags Movies
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -67,7 +67,7 @@ func CreateMovie(c *gin.Context) {
 		HorizontalImage: created.HorizontalImage,
 		GenreIDs:        movie.GenreIDs,
 		DirectorIDs:     movie.DirectorIDs,
-		CastIDs:        movie.CastIDs,
+		CastIDs:         movie.CastIDs,
 	}
 
 	c.JSON(http.StatusOK, utils.Response{
@@ -80,7 +80,7 @@ func CreateMovie(c *gin.Context) {
 // GetAllMovies godoc
 // @Summary Get all movies
 // @Description Retrieve all movies in the system
-// @Tags Movies (Public)
+// @Tags Movies
 // @Produce json
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -106,7 +106,7 @@ func GetAllMovies(c *gin.Context) {
 // GetMovieByID godoc
 // @Summary Get movie by ID
 // @Description Retrieve movie details by its ID
-// @Tags Movies (Public)
+// @Tags Movies
 // @Produce json
 // @Param id path int true "Movie ID"
 // @Success 200 {object} utils.Response
@@ -135,7 +135,7 @@ func GetMovieByID(c *gin.Context) {
 // GetNowShowing godoc
 // @Summary Get now showing movies
 // @Description Retrieve list of currently showing movies
-// @Tags Movies (Public)
+// @Tags Movies
 // @Produce json
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -161,7 +161,7 @@ func GetNowShowing(c *gin.Context) {
 // GetUpcoming godoc
 // @Summary Get upcoming movies
 // @Description Retrieve list of upcoming movies
-// @Tags Movies (Public)
+// @Tags Movies
 // @Produce json
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -188,7 +188,7 @@ func GetUpcoming(c *gin.Context) {
 // DeleteMovie godoc
 // @Summary Delete a movie
 // @Description Admin only. Delete a movie by ID
-// @Tags Movies (Admin)
+// @Tags Movies
 // @Security BearerAuth
 // @Produce json
 // @Param id path int true "Movie ID"
@@ -216,7 +216,7 @@ func DeleteMovie(c *gin.Context) {
 // UpdateMovie godoc
 // @Summary Update a movie
 // @Description Admin only. Update movie details and relations
-// @Tags Movies (Admin)
+// @Tags Movies
 // @Security BearerAuth
 // @Accept json
 // @Produce json

@@ -73,3 +73,14 @@ func GetAllGenres() ([]Genre, error){
 
 	return genre, err
 }
+
+func DeleteGenre(id string) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(), `DELETE FROM genres WHERE id = $1`, id)
+	return err
+}
