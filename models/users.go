@@ -141,3 +141,26 @@ func GetAllUsers() ([]User, error) {
 
   return users, nil
 }
+
+func GetUserByID(userID int) (User, error) {
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return User{}, err
+  }
+  defer conn.Release()
+
+  var u User
+  err = conn.QueryRow(context.Background(), `
+    SELECT id, email, full_name, phone_number, profile_picture, role
+    FROM users
+    WHERE id = $1
+  `, userID).Scan(
+    &u.ID,
+    &u.Email,
+    &u.FullName,
+    &u.PhoneNumber,
+    &u.ProfilePicture,
+    &u.Role,
+  )
+  return u, err
+}

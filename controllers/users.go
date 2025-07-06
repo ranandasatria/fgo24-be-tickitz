@@ -308,3 +308,34 @@ func GetAllUsers(c *gin.Context) {
 		Results: userList,
 	})
 }
+
+
+func GetProfile(c *gin.Context) {
+  claims := c.MustGet("user").(jwt.MapClaims)
+  userID := int(claims["userId"].(float64))
+
+  user, err := models.GetUserByID(userID)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, utils.Response{
+      Success: false,
+      Message: "Failed to fetch profile",
+      Errors:  err.Error(),
+    })
+    return
+  }
+
+  response := dto.UserListResponse{
+    ID:       user.ID,
+    Email:    user.Email,
+    FullName: user.FullName,
+    Role:     user.Role,
+    Phone:    user.PhoneNumber,
+    Picture:  user.ProfilePicture,
+  }
+
+  c.JSON(http.StatusOK, utils.Response{
+    Success: true,
+    Message: "Your profile",
+    Results: response,
+  })
+}
