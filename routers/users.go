@@ -16,4 +16,5 @@ func userRouter(r *gin.RouterGroup) {
 func profileRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.GET("", controllers.GetProfile)
+	r.PATCH("", controllers.UpdateProfile)
 }

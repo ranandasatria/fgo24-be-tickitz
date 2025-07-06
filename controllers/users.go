@@ -403,3 +403,60 @@ func DeleteUserByID(c *gin.Context) {
 		Message: fmt.Sprintf("User with ID %d deleted", userID),
 	})
 }
+
+// @Summary Edit profile (and optionally change password)
+// @Tags Profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.UpdateProfileRequest true "Update profile data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /profile [patch]
+func UpdateProfile(c *gin.Context) {
+  claims := c.MustGet("user").(jwt.MapClaims)
+  userID := int(claims["userId"].(float64))
+
+  var req dto.UpdateProfileRequest
+  if err := c.ShouldBindJSON(&req); err != nil {
+    c.JSON(http.StatusBadRequest, utils.Response{
+      Success: false,
+      Message: "Invalid input",
+      Errors:  err.Error(),
+    })
+    return
+  }
+
+  if req.OldPassword != nil && req.NewPassword == nil {
+    c.JSON(http.StatusBadRequest, utils.Response{
+      Success: false,
+      Message: "If oldPassword is provided, newPassword must also be provided",
+    })
+    return
+  }
+
+  err := models.UpdateUserProfile(userID, req)
+  if err != nil {
+    if err.Error() == "old password incorrect" {
+      c.JSON(http.StatusUnauthorized, utils.Response{
+        Success: false,
+        Message: "Old password is incorrect",
+      })
+      return
+    }
+
+    c.JSON(http.StatusInternalServerError, utils.Response{
+      Success: false,
+      Message: "Failed to update profile",
+      Errors:  err.Error(),
+    })
+    return
+  }
+
+  c.JSON(http.StatusOK, utils.Response{
+    Success: true,
+    Message: "Profile updated successfully",
+  })
+}

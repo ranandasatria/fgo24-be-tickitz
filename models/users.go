@@ -1,6 +1,7 @@
 package models
 
 import (
+	"be-tickitz/dto"
 	"be-tickitz/utils"
 	"context"
 	"fmt"
@@ -187,4 +188,51 @@ func DeleteUserByID(userID int) error {
 		`DELETE FROM users WHERE id = $1`, userID,
 	)
 	return err
+}
+
+func UpdateUserProfile(userID int, data dto.UpdateProfileRequest) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(), `
+    UPDATE users
+    SET full_name = COALESCE($1, full_name),
+        phone_number = COALESCE($2, phone_number),
+        profile_picture = COALESCE($3, profile_picture),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
+  `, data.FullName, data.PhoneNumber, data.ProfilePicture, userID)
+	if err != nil {
+		return err
+	}
+
+	if data.OldPassword != nil && data.NewPassword != nil {
+		var hashedPassword string
+		err := conn.QueryRow(context.Background(),
+			`SELECT password FROM users WHERE id = $1`, userID,
+		).Scan(&hashedPassword)
+		if err != nil {
+			return err
+		}
+
+		if err := utils.CompareHash(hashedPassword, *data.OldPassword); err != nil {
+			return fmt.Errorf("old password incorrect")
+		}
+
+		newHashed, err := utils.HashString(*data.NewPassword)
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.Exec(context.Background(),
+			`UPDATE users SET password = $1 WHERE id = $2`, newHashed, userID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

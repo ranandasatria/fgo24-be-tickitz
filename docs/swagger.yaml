@@ -111,6 +111,19 @@ definitions:
       title:
         type: string
     type: object
+  dto.UpdateProfileRequest:
+    properties:
+      fullName:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+      phoneNumber:
+        type: string
+      profilePicture:
+        type: string
+    type: object
   utils.Response:
     properties:
       error: {}
@@ -786,6 +799,40 @@ paths:
       security:
       - BearerAuth: []
       summary: Get profile detail
+      tags:
+      - Profile
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update profile data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Edit profile (and optionally change password)
       tags:
       - Profile
   /register:

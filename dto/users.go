@@ -8,3 +8,11 @@ type UserListResponse struct {
   Phone    *string `json:"phoneNumber,omitempty"`
   Picture  *string `json:"profilePicture,omitempty"`
 }
+
+type UpdateProfileRequest struct {
+  FullName       *string `json:"fullName,omitempty"`
+  PhoneNumber    *string `json:"phoneNumber,omitempty"`
+  ProfilePicture *string `json:"profilePicture,omitempty"`
+  OldPassword    *string `json:"oldPassword,omitempty"`
+  NewPassword    *string `json:"newPassword,omitempty"`
+}
