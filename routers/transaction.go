@@ -10,6 +10,7 @@ import (
 func TransactionRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.POST("", controllers.CreateTransaction)
+  r.GET("", controllers.GetMyTransactions)
 }
 
 func TransactionAdminRouter(r *gin.RouterGroup) {

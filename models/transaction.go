@@ -176,3 +176,69 @@ func GetAllTransactions() ([]dto.TransactionSummary, error) {
   return transactions, nil
 }
 
+func GetUserTransactions(userID int) ([]dto.TransactionSummary, error) {
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return nil, err
+  }
+  defer conn.Release()
+
+  rows, err := conn.Query(context.Background(), `
+    SELECT
+      t.id AS transaction_id,
+      m.title AS movie_title,
+      t.show_date,
+      t.show_time,
+      t.location,
+      t.cinema,
+      t.total_price,
+      t.payment_method,
+      ARRAY_AGG(td.seat) AS seats
+    FROM transactions t
+    JOIN movies m ON t.id_movie = m.id
+    LEFT JOIN transaction_details td ON td.transaction_id = t.id
+    WHERE t.id_user = $1
+    GROUP BY
+      t.id, m.title, t.show_date, t.show_time,
+      t.location, t.cinema, t.total_price, t.payment_method
+    ORDER BY t.created_at DESC
+  `, userID)
+  if err != nil {
+    return nil, err
+  }
+  defer rows.Close()
+
+  var transactions []dto.TransactionSummary
+
+  for rows.Next() {
+    var t dto.TransactionSummary
+    var showDate, showTime time.Time
+    var seats []string
+
+    if err := rows.Scan(
+      &t.TransactionID,
+      &t.MovieTitle,
+      &showDate,
+      &showTime,
+      &t.Location,
+      &t.Cinema,
+      &t.TotalPrice,
+      &t.PaymentMethod,
+      &seats,
+    ); err != nil {
+      return nil, err
+    }
+
+    t.ShowDate = showDate.Format("2006-01-02")
+    t.ShowTime = showTime.Format("15:04")
+    t.Seats = seats
+
+    transactions = append(transactions, t)
+  }
+
+  if err := rows.Err(); err != nil {
+    return nil, err
+  }
+
+  return transactions, nil
+}

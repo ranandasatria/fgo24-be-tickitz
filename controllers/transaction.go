@@ -86,13 +86,18 @@ func GetAllTransactions(c *gin.Context) {
   role := claims["role"].(string)
 
   if role != "admin" {
-    c.JSON(http.StatusForbidden, utils.Response{Success: false, Message: "Only admin can access"})
+    c.JSON(http.StatusForbidden, utils.Response{
+      Success: false, 
+      Message: "Only admin can access"})
     return
   }
 
   results, err := models.GetAllTransactions()
   if err != nil {
-    c.JSON(http.StatusInternalServerError, utils.Response{Success: false, Message: "Failed to fetch", Errors: err.Error()})
+    c.JSON(http.StatusInternalServerError, utils.Response{
+      Success: false, 
+      Message: "Failed to fetch", 
+      Errors: err.Error()})
     return
   }
 
@@ -100,5 +105,33 @@ func GetAllTransactions(c *gin.Context) {
     Success: true,
     Message: "All transactions",
     Results: results,
+  })
+}
+
+// @Summary Get transactions per user
+// @Tags Transactions
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /transactions [get]
+func GetMyTransactions(c *gin.Context) {
+  claims := c.MustGet("user").(jwt.MapClaims)
+  userID := int(claims["userId"].(float64))
+
+  transactions, err := models.GetUserTransactions(userID)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, utils.Response{
+      Success: false, 
+      Message: "Failed to fetch", 
+      Errors: err.Error()})
+    return
+  }
+
+  c.JSON(http.StatusOK, utils.Response{
+    Success: true,
+    Message: "Your transactions",
+    Results: transactions,
   })
 }
