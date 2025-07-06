@@ -10,4 +10,6 @@ import (
 func adminPaymentMethod(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.POST("", controllers.CreatePaymentMethod)
+	r.GET("", controllers.GetAllPaymentMethod)
+	r.DELETE("/:id", controllers.DeletePaymentMethod)
 }
