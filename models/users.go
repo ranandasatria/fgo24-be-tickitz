@@ -12,8 +12,8 @@ type User struct {
 	ID             int     `json:"idUser" db:"id"`
 	Email          string  `json:"email"`
 	Password       string  `json:"password"`
-	FullName       string  `json:"fullName" db:"full_name"`
-	PhoneNumber    *string `json:"phoneNumber" db:"phone_number"`
+	FullName       string  `json:"fullName" db:"full_name,omitempty"`
+	PhoneNumber    *string `json:"phoneNumber" db:"phone_number,omitempty"`
 	ProfilePicture *string `json:"profilePicture" db:"profile_picture"`
 	Role           string  `json:"role" db:"role"`
 }
@@ -103,4 +103,41 @@ func UpdateUserPassword(userID int, newPassword string) error {
 	)
 
 	return err
+}
+
+
+func GetAllUsers() ([]User, error) {
+  conn, err := utils.ConnectDB()
+  if err != nil {
+    return nil, err
+  }
+  defer conn.Release()
+
+  rows, err := conn.Query(context.Background(), `
+    SELECT id, email, full_name, phone_number, profile_picture, role
+    FROM users
+    ORDER BY id ASC
+  `)
+  if err != nil {
+    return nil, err
+  }
+  defer rows.Close()
+
+  var users []User
+  for rows.Next() {
+    var u User
+    if err := rows.Scan(
+      &u.ID,
+      &u.Email,
+      &u.FullName,
+      &u.PhoneNumber,
+      &u.ProfilePicture,
+      &u.Role,
+    ); err != nil {
+      return nil, err
+    }
+    users = append(users, u)
+  }
+
+  return users, nil
 }

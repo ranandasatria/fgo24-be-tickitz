@@ -14,6 +14,7 @@ func CombineRouter(r *gin.Engine) {
 	loginRouter(r.Group("/login"))
 	forgotPasswordRouter(r.Group("/forgot-password"))
 	resetPasswordRouter(r.Group("/reset-password"))
+	userRouter(r.Group("/users"))
 	movieAdminRouter(r.Group("/admin/movies"))
 	moviePublicRouter(r.Group("/movies"))
 	genreAdminRouter(r.Group("/admin/genres"))

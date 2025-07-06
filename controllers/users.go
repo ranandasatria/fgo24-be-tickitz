@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Register godoc
@@ -49,10 +50,17 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	response := dto.UserResponse{
+		ID:       createdUser.ID,
+		Email:    createdUser.Email,
+		FullName: createdUser.FullName,
+		Role:     createdUser.Role,
+	}
+
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "User created",
-		Results: createdUser,
+		Results: response,
 	})
 }
 
@@ -249,5 +257,54 @@ func ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Password updated successfully",
+	})
+}
+
+// @Summary Get all users (admin only)
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/users [get]
+func GetAllUsers(c *gin.Context) {
+	claims := c.MustGet("user").(jwt.MapClaims)
+	role := claims["role"].(string)
+
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, utils.Response{
+			Success: false,
+			Message: "Only admin can access",
+		})
+		return
+	}
+
+	users, err := models.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to fetch users",
+			Errors:  err.Error(),
+		})
+		return
+	}
+
+	var userList []dto.UserListResponse
+	for _, u := range users {
+		userList = append(userList, dto.UserListResponse{
+			ID:       u.ID,
+			Email:    u.Email,
+			FullName: u.FullName,
+			Role:     u.Role,
+			Phone:    u.PhoneNumber,
+			Picture:  u.ProfilePicture,
+		})
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "All users",
+		Results: userList,
 	})
 }
