@@ -50,7 +50,7 @@ type MovieUpcoming struct {
 type UpdateMovieInput struct {
   Title           *string   `json:"title"`
   Description     *string   `json:"description"`
-  ReleaseDate     *time.Time `json:"releaseDate"`
+  ReleaseDate     *string `json:"releaseDate"`
   Duration        *int      `json:"duration"`
   Image           *string   `json:"image"`
   HorizontalImage *string   `json:"horizontalImage"`

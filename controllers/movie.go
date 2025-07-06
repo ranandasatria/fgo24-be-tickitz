@@ -12,6 +12,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// CreateMovie godoc
+// @Summary Create new movie
+// @Description Admin only. Add a new movie with metadata and relations
+// @Tags Movies (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.Movie true "Movie data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/movies [post]
 func CreateMovie(c *gin.Context) {
 	claims := c.MustGet("user").(jwt.MapClaims)
 
@@ -64,6 +77,14 @@ func CreateMovie(c *gin.Context) {
 	})
 }
 
+// GetAllMovies godoc
+// @Summary Get all movies
+// @Description Retrieve all movies in the system
+// @Tags Movies (Public)
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /movies [get]
 func GetAllMovies(c *gin.Context) {
 	movies, err := models.GetAllMovies()
 	if err != nil {
@@ -82,6 +103,15 @@ func GetAllMovies(c *gin.Context) {
 	})
 }
 
+// GetMovieByID godoc
+// @Summary Get movie by ID
+// @Description Retrieve movie details by its ID
+// @Tags Movies (Public)
+// @Produce json
+// @Param id path int true "Movie ID"
+// @Success 200 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /movies/{id} [get]
 func GetMovieByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -102,6 +132,14 @@ func GetMovieByID(c *gin.Context) {
 	})
 }
 
+// GetNowShowing godoc
+// @Summary Get now showing movies
+// @Description Retrieve list of currently showing movies
+// @Tags Movies (Public)
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /movies/now-showing [get]
 func GetNowShowing(c *gin.Context) {
 	movies, err := models.GetNowShowing()
 	if err != nil {
@@ -120,6 +158,14 @@ func GetNowShowing(c *gin.Context) {
 	})
 }
 
+// GetUpcoming godoc
+// @Summary Get upcoming movies
+// @Description Retrieve list of upcoming movies
+// @Tags Movies (Public)
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /movies/upcoming [get]
 func GetUpcoming(c *gin.Context) {
 	movies, err := models.GetUpcoming()
 	if err != nil {
@@ -139,6 +185,17 @@ func GetUpcoming(c *gin.Context) {
 	})
 }
 
+// DeleteMovie godoc
+// @Summary Delete a movie
+// @Description Admin only. Delete a movie by ID
+// @Tags Movies (Admin)
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Movie ID"
+// @Success 200 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/movies/{id} [delete]
 func DeleteMovie(c *gin.Context) {
 	claims := c.MustGet("user").(jwt.MapClaims)
 	if role, ok := claims["role"].(string); !ok || role != "admin" {
@@ -156,6 +213,20 @@ func DeleteMovie(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.Response{Success: true, Message: "Movie deleted"})
 }
 
+// UpdateMovie godoc
+// @Summary Update a movie
+// @Description Admin only. Update movie details and relations
+// @Tags Movies (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Movie ID"
+// @Param request body dto.UpdateMovieInput true "Update movie data"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/movies/{id} [patch]
 func UpdateMovie(c *gin.Context) {
 	claims := c.MustGet("user").(jwt.MapClaims)
 	role, _ := claims["role"].(string)

@@ -31,6 +31,60 @@ definitions:
       show_time:
         type: string
     type: object
+  dto.Movie:
+    properties:
+      ReleaseDate:
+        type: string
+      castIDs:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      directorIDs:
+        items:
+          type: integer
+        type: array
+      duration:
+        type: integer
+      genreIDs:
+        items:
+          type: integer
+        type: array
+      horizontal_image:
+        type: string
+      image:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.UpdateMovieInput:
+    properties:
+      castIDs:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      directorIDs:
+        items:
+          type: integer
+        type: array
+      duration:
+        type: integer
+      genreIDs:
+        items:
+          type: integer
+        type: array
+      horizontalImage:
+        type: string
+      image:
+        type: string
+      releaseDate:
+        type: string
+      title:
+        type: string
+    type: object
   utils.Response:
     properties:
       error: {}
@@ -47,6 +101,111 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
+  /admin/movies:
+    post:
+      consumes:
+      - application/json
+      description: Admin only. Add a new movie with metadata and relations
+      parameters:
+      - description: Movie data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Movie'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new movie
+      tags:
+      - Movies (Admin)
+  /admin/movies/{id}:
+    delete:
+      description: Admin only. Delete a movie by ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a movie
+      tags:
+      - Movies (Admin)
+    patch:
+      consumes:
+      - application/json
+      description: Admin only. Update movie details and relations
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update movie data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMovieInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update a movie
+      tags:
+      - Movies (Admin)
   /forgot-password:
     post:
       consumes:
@@ -118,6 +277,80 @@ paths:
       summary: Login user
       tags:
       - Auth
+  /movies:
+    get:
+      description: Retrieve all movies in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get all movies
+      tags:
+      - Movies (Public)
+  /movies/{id}:
+    get:
+      description: Retrieve movie details by its ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get movie by ID
+      tags:
+      - Movies (Public)
+  /movies/now-showing:
+    get:
+      description: Retrieve list of currently showing movies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get now showing movies
+      tags:
+      - Movies (Public)
+  /movies/upcoming:
+    get:
+      description: Retrieve list of upcoming movies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get upcoming movies
+      tags:
+      - Movies (Public)
   /register:
     post:
       consumes:
