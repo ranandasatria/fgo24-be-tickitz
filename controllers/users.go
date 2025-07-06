@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -267,7 +268,7 @@ func ResetPassword(c *gin.Context) {
 // @Success 200 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /admin/users [get]
+// @Router /users [get]
 func GetAllUsers(c *gin.Context) {
 	claims := c.MustGet("user").(jwt.MapClaims)
 	role := claims["role"].(string)
@@ -309,33 +310,96 @@ func GetAllUsers(c *gin.Context) {
 	})
 }
 
-
+// @Summary Get profile detail
+// @Tags Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /profile [get]
 func GetProfile(c *gin.Context) {
-  claims := c.MustGet("user").(jwt.MapClaims)
-  userID := int(claims["userId"].(float64))
+	claims := c.MustGet("user").(jwt.MapClaims)
+	userID := int(claims["userId"].(float64))
 
-  user, err := models.GetUserByID(userID)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, utils.Response{
-      Success: false,
-      Message: "Failed to fetch profile",
-      Errors:  err.Error(),
-    })
-    return
-  }
+	user, err := models.GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.Response{
+			Success: false,
+			Message: "Failed to fetch profile",
+			Errors:  err.Error(),
+		})
+		return
+	}
 
-  response := dto.UserListResponse{
-    ID:       user.ID,
-    Email:    user.Email,
-    FullName: user.FullName,
-    Role:     user.Role,
-    Phone:    user.PhoneNumber,
-    Picture:  user.ProfilePicture,
-  }
+	response := dto.UserListResponse{
+		ID:       user.ID,
+		Email:    user.Email,
+		FullName: user.FullName,
+		Role:     user.Role,
+		Phone:    user.PhoneNumber,
+		Picture:  user.ProfilePicture,
+	}
 
-  c.JSON(http.StatusOK, utils.Response{
-    Success: true,
-    Message: "Your profile",
-    Results: response,
-  })
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Your profile",
+		Results: response,
+	})
+}
+
+// @Summary Delete user by ID (admin only)
+// @Tags Users
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/users/{id} [delete]
+func DeleteUserByID(c *gin.Context) {
+	claims := c.MustGet("user").(jwt.MapClaims)
+	role := claims["role"].(string)
+
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, utils.Response{
+			Success: false,
+			Message: "Only admin can access",
+		})
+		return
+	}
+
+	idParam := c.Param("id")
+	userID, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.Response{
+			Success: false,
+			Message: "Invalid user ID",
+		})
+		return
+	}
+
+	err = models.DeleteUserByID(userID)
+	if err != nil {
+		if err.Error() == "user not found" {
+			c.JSON(http.StatusNotFound, utils.Response{
+				Success: false,
+				Message: "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.Response{
+				Success: false,
+				Message: "Failed to delete user",
+				Errors:  err.Error(),
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.Response{
+		Success: true,
+		Message: fmt.Sprintf("User with ID %d deleted", userID),
+	})
 }

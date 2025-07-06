@@ -3,6 +3,7 @@ package models
 import (
 	"be-tickitz/utils"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -105,62 +106,85 @@ func UpdateUserPassword(userID int, newPassword string) error {
 	return err
 }
 
-
 func GetAllUsers() ([]User, error) {
-  conn, err := utils.ConnectDB()
-  if err != nil {
-    return nil, err
-  }
-  defer conn.Release()
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
 
-  rows, err := conn.Query(context.Background(), `
+	rows, err := conn.Query(context.Background(), `
     SELECT id, email, full_name, phone_number, profile_picture, role
     FROM users
     ORDER BY id ASC
   `)
-  if err != nil {
-    return nil, err
-  }
-  defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-  var users []User
-  for rows.Next() {
-    var u User
-    if err := rows.Scan(
-      &u.ID,
-      &u.Email,
-      &u.FullName,
-      &u.PhoneNumber,
-      &u.ProfilePicture,
-      &u.Role,
-    ); err != nil {
-      return nil, err
-    }
-    users = append(users, u)
-  }
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(
+			&u.ID,
+			&u.Email,
+			&u.FullName,
+			&u.PhoneNumber,
+			&u.ProfilePicture,
+			&u.Role,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
 
-  return users, nil
+	return users, nil
 }
 
 func GetUserByID(userID int) (User, error) {
-  conn, err := utils.ConnectDB()
-  if err != nil {
-    return User{}, err
-  }
-  defer conn.Release()
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return User{}, err
+	}
+	defer conn.Release()
 
-  var u User
-  err = conn.QueryRow(context.Background(), `
+	var u User
+	err = conn.QueryRow(context.Background(), `
     SELECT id, email, full_name, phone_number, profile_picture, role
     FROM users
     WHERE id = $1
   `, userID).Scan(
-    &u.ID,
-    &u.Email,
-    &u.FullName,
-    &u.PhoneNumber,
-    &u.ProfilePicture,
-    &u.Role,
-  )
-  return u, err
+		&u.ID,
+		&u.Email,
+		&u.FullName,
+		&u.PhoneNumber,
+		&u.ProfilePicture,
+		&u.Role,
+	)
+	return u, err
+}
+
+func DeleteUserByID(userID int) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	var exists bool
+	err = conn.QueryRow(context.Background(),
+		`SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)`, userID,
+	).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("user not found")
+	}
+
+	_, err = conn.Exec(context.Background(),
+		`DELETE FROM users WHERE id = $1`, userID,
+	)
+	return err
 }

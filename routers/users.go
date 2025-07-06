@@ -10,6 +10,7 @@ import (
 func userRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.GET("", controllers.GetAllUsers)
+	r.DELETE("/:id", controllers.DeleteUserByID)
 }
 
 func profileRouter(r *gin.RouterGroup) {
