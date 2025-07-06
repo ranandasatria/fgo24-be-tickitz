@@ -46,3 +46,14 @@ func GetAllActors() ([]Actor, error) {
 
   return pgx.CollectRows(rows, pgx.RowToStructByName[Actor])
 }
+
+func DeleteActor(id string) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(), `DELETE FROM actors WHERE id = $1`, id)
+	return err
+}

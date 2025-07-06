@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  dto.Actor:
+    properties:
+      actorName:
+        type: string
+    required:
+    - actorName
+    type: object
   dto.AuthRegisterLogin:
     properties:
       email:
@@ -113,6 +120,89 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
+  /admin/actors:
+    get:
+      description: Retrieve all actors
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all actors
+      tags:
+      - Actors
+    post:
+      consumes:
+      - application/json
+      description: Admin only. Add a new actor
+      parameters:
+      - description: Actor data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Actor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create actor
+      tags:
+      - Actors
+  /admin/actors/{id}:
+    delete:
+      description: Admin only. Delete a actor by ID
+      parameters:
+      - description: Actor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a actor
+      tags:
+      - Actors
   /admin/directors:
     get:
       description: Retrieve all directors
