@@ -22,6 +22,7 @@ func CombineRouter(r *gin.Engine) {
 	actorAdminRouter(r.Group("/admin/actors"))
 	adminPaymentMethod(r.Group("/admin/payment-method"))
 	TransactionRouter(r.Group("/transactions"))
+	TransactionAdminRouter(r.Group("/admin/transactions"))
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/docs", func(ctx *gin.Context) {

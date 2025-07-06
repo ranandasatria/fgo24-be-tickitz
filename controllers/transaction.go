@@ -72,3 +72,33 @@ func CreateTransaction(c *gin.Context) {
     Message: "Transaction created successfully",
   })
 }
+
+// @Summary Get all transactions (admin only)
+// @Tags Transactions
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/transactions [get]
+func GetAllTransactions(c *gin.Context) {
+  claims := c.MustGet("user").(jwt.MapClaims)
+  role := claims["role"].(string)
+
+  if role != "admin" {
+    c.JSON(http.StatusForbidden, utils.Response{Success: false, Message: "Only admin can access"})
+    return
+  }
+
+  results, err := models.GetAllTransactions()
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, utils.Response{Success: false, Message: "Failed to fetch", Errors: err.Error()})
+    return
+  }
+
+  c.JSON(http.StatusOK, utils.Response{
+    Success: true,
+    Message: "All transactions",
+    Results: results,
+  })
+}

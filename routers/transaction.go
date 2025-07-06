@@ -1,12 +1,18 @@
 package routers
 
 import (
-  "be-tickitz/controllers"
-  "be-tickitz/middlewares"
-  "github.com/gin-gonic/gin"
+	"be-tickitz/controllers"
+	"be-tickitz/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TransactionRouter(r *gin.RouterGroup) {
-  r.Use(middlewares.VerifyToken())
-  r.POST("", controllers.CreateTransaction)
+	r.Use(middlewares.VerifyToken())
+	r.POST("", controllers.CreateTransaction)
+}
+
+func TransactionAdminRouter(r *gin.RouterGroup) {
+	r.Use(middlewares.VerifyToken())
+	r.GET("", controllers.GetAllTransactions)
 }
