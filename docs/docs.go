@@ -909,7 +909,7 @@ const docTemplate = `{
         },
         "/movies": {
             "get": {
-                "description": "Retrieve all movies in the system",
+                "description": "View all movies in database",
                 "produces": [
                     "application/json"
                 ],
@@ -917,6 +917,14 @@ const docTemplate = `{
                     "Movies"
                 ],
                 "summary": "Get all movies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search keyword",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -109,16 +109,58 @@ func GetAllMovies() ([]Movie, error) {
 	defer conn.Release()
 
 	rows, err := conn.Query(context.Background(), `
-		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
-		FROM movies
-		ORDER BY created_at DESC
-	`)
+    SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+    FROM movies
+    ORDER BY id ASC
+  `)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
-	return movies, err
+	var movies []Movie
+	for rows.Next() {
+		var m Movie
+		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.ReleaseDate, &m.Duration, &m.Image, &m.HorizontalImage)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, m)
+	}
+
+	return movies, nil
+}
+
+func SearchMovies(search string) ([]Movie, error) {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	query := `
+    SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+    FROM movies
+    WHERE title ILIKE '%' || $1 || '%'
+    ORDER BY id ASC
+  `
+	rows, err := conn.Query(context.Background(), query, search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []Movie
+	for rows.Next() {
+		var m Movie
+		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.ReleaseDate, &m.Duration, &m.Image, &m.HorizontalImage)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, m)
+	}
+
+	return movies, nil
 }
 
 func GetMovieByID(id string) (dto.MovieDetail, error) {

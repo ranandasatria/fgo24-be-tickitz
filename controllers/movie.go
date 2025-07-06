@@ -4,6 +4,8 @@ import (
 	"be-tickitz/dto"
 	"be-tickitz/models"
 	"be-tickitz/utils"
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -79,14 +81,48 @@ func CreateMovie(c *gin.Context) {
 
 // GetAllMovies godoc
 // @Summary Get all movies
-// @Description Retrieve all movies in the system
+// @Description View all movies in database
 // @Tags Movies
 // @Produce json
+// @Param search query string false "Search keyword"
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /movies [get]
 func GetAllMovies(c *gin.Context) {
-	movies, err := models.GetAllMovies()
+	ctx := context.Background()
+
+	err := utils.RedisClient().Ping(ctx).Err()
+	noredis := false
+	if err != nil {
+		log.Println("Redis unavailable:", err.Error())
+		noredis = true
+	}
+
+	search := c.DefaultQuery("search", "")
+	cacheKey := "/movies?search=" + search
+
+	if !noredis {
+		val, err := utils.RedisClient().Get(ctx, cacheKey).Result()
+		if err == nil {
+			var cached []dto.MovieList
+			if err := json.Unmarshal([]byte(val), &cached); err == nil {
+				c.JSON(http.StatusOK, utils.Response{
+					Success: true,
+					Message: "All movies (from Redis)",
+					Results: cached,
+				})
+				return
+			}
+		}
+	}
+
+	var rawMovies []models.Movie
+	if search == "" {
+		rawMovies, err = models.GetAllMovies()
+	} else {
+		rawMovies, err = models.SearchMovies(search)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
@@ -94,6 +130,25 @@ func GetAllMovies(c *gin.Context) {
 			Errors:  err.Error(),
 		})
 		return
+	}
+
+	var movies []dto.MovieList
+	for _, m := range rawMovies {
+		movies = append(movies, dto.MovieList{
+			ID:              m.ID,
+			Title:           m.Title,
+			Description:     m.Description,
+			ReleaseDate:     m.ReleaseDate,
+			Duration:        m.Duration,
+			Image:           m.Image,
+			HorizontalImage: m.HorizontalImage,
+		})
+	}
+
+	if !noredis {
+		if encoded, err := json.Marshal(movies); err == nil {
+			utils.RedisClient().Set(ctx, cacheKey, encoded, 0)
+		}
 	}
 
 	c.JSON(http.StatusOK, utils.Response{
