@@ -46,3 +46,14 @@ func GetAllDirectors() ([]Director, error) {
 
   return pgx.CollectRows(rows, pgx.RowToStructByName[Director])
 }
+
+func DeleteDirector(id string) error {
+	conn, err := utils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(), `DELETE FROM directors WHERE id = $1`, id)
+	return err
+}

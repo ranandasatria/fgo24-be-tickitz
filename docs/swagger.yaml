@@ -31,6 +31,13 @@ definitions:
       show_time:
         type: string
     type: object
+  dto.Director:
+    properties:
+      directorName:
+        type: string
+    required:
+    - directorName
+    type: object
   dto.Genre:
     properties:
       genreName:
@@ -106,6 +113,89 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
+  /admin/directors:
+    get:
+      description: Retrieve all directors
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all directors
+      tags:
+      - Directors
+    post:
+      consumes:
+      - application/json
+      description: Admin only. Add a new director
+      parameters:
+      - description: Director data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Director'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create director
+      tags:
+      - Directors
+  /admin/directors/{id}:
+    delete:
+      description: Admin only. Delete a director by ID
+      parameters:
+      - description: Director ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a director
+      tags:
+      - Directors
   /admin/genres:
     post:
       consumes:
