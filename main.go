@@ -15,6 +15,10 @@ import (
 // @description This is a simple movie ticketing API
 // @host localhost:8888
 // @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
 	r := gin.Default()
 

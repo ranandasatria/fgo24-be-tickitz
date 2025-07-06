@@ -10,6 +10,20 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// CreateTransaction godoc
+// @Summary Create a new transaction
+// @Description Book seats and create a new transaction
+// @Tags Transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateTransactionRequest true "Transaction request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /transactions [post]
 func CreateTransaction(c *gin.Context) {
   claims := c.MustGet("user").(jwt.MapClaims)
   userID := int(claims["userId"].(float64))

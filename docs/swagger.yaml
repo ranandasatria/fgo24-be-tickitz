@@ -10,6 +10,27 @@ definitions:
     - email
     - password
     type: object
+  dto.CreateTransactionRequest:
+    properties:
+      cinema:
+        type: string
+      location:
+        type: string
+      movie_id:
+        type: integer
+      payment_method:
+        type: integer
+      price_per_seat:
+        type: integer
+      seats:
+        items:
+          type: string
+        type: array
+      show_date:
+        type: string
+      show_time:
+        type: string
+    type: object
   utils.Response:
     properties:
       error: {}
@@ -166,4 +187,46 @@ paths:
       summary: Reset user password
       tags:
       - Auth
+  /transactions:
+    post:
+      consumes:
+      - application/json
+      description: Book seats and create a new transaction
+      parameters:
+      - description: Transaction request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Create a new transaction
+      tags:
+      - Transactions
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
