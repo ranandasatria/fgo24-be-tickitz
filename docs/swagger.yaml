@@ -140,7 +140,7 @@ info:
   title: Be-Tickitz API
   version: "1.0"
 paths:
-  /admin/actors:
+  /actors:
     get:
       description: Retrieve all actors
       produces:
@@ -159,6 +159,7 @@ paths:
       summary: Get all actors
       tags:
       - Actors
+  /admin/actors:
     post:
       consumes:
       - application/json
@@ -224,24 +225,6 @@ paths:
       tags:
       - Actors
   /admin/directors:
-    get:
-      description: Retrieve all directors
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get all directors
-      tags:
-      - Directors
     post:
       consumes:
       - application/json
@@ -617,6 +600,25 @@ paths:
       summary: Delete user by ID (admin only)
       tags:
       - Users
+  /directors:
+    get:
+      description: Retrieve all directors
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all directors
+      tags:
+      - Directors
   /forgot-password:
     post:
       consumes:

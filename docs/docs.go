@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/actors": {
+        "/actors": {
             "get": {
                 "security": [
                     {
@@ -44,7 +44,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/admin/actors": {
             "post": {
                 "security": [
                     {
@@ -148,35 +150,6 @@ const docTemplate = `{
             }
         },
         "/admin/directors": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve all directors",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Directors"
-                ],
-                "summary": "Get all directors",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
@@ -759,6 +732,37 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/directors": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all directors",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Directors"
+                ],
+                "summary": "Get all directors",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }

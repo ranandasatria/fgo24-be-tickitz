@@ -54,7 +54,7 @@ func CreateDirector(c *gin.Context) {
 // @Security BearerAuth
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /admin/directors [get]
+// @Router /directors [get]
 func GetAllDirectors(c *gin.Context) {
   directors, err := models.GetAllDirectors()
   if err != nil {

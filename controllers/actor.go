@@ -53,7 +53,7 @@ func CreateActor(c *gin.Context) {
 // @Security BearerAuth
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /admin/actors [get]
+// @Router /actors [get]
 func GetAllActors(c *gin.Context) {
   actors, err := models.GetAllActors()
   if err != nil {
