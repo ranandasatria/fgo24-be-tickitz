@@ -52,7 +52,7 @@ func Register(c *gin.Context) {
 	}
 
 	response := dto.UserResponse{
-		ID:       createdUser.ID,
+		// ID:       createdUser.ID,
 		Email:    createdUser.Email,
 		FullName: createdUser.FullName,
 		Role:     createdUser.Role,

@@ -7,7 +7,6 @@ type AuthRegisterLogin struct {
 }
 
 type UserResponse struct {
-  ID       int    `json:"idUser"`
   Email    string `json:"email"`
   FullName string `json:"fullName"`
   Role     string `json:"role"`
