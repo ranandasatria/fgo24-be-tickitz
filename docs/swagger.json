@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8888",
+    "host": "146.190.102.54:9303",
     "basePath": "/",
     "paths": {
         "/actors": {

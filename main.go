@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -13,7 +14,7 @@ import (
 // @title Be-Tickitz API
 // @version 1.0
 // @description This is a simple movie ticketing API
-// @host localhost:8888
+// @host 146.190.102.54:9303
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -25,6 +26,12 @@ func main() {
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"Message": "Backend is running"})
 	})
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+	}))
 
 	routers.CombineRouter(r)
 
