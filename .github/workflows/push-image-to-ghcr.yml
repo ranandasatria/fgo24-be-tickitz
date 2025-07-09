@@ -31,6 +31,16 @@ jobs:
           push: true
           tags: ghcr.io/ranandasatria/fgo24-be-tickitz:latest
 
+      - name: Copy migrations to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: 9301
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          source: "migrations"
+          target: "/home/nanda/deploy"
+
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -44,7 +54,7 @@ jobs:
             docker compose up -d postgres redis
             docker run --rm \
               --network deploy_netapp \
-              -v $PWD/migrations:/migrations \
+              -v "$PWD/migrations:/migrations" \
               migrate/migrate \
               -path=/migrations \
               -database "postgres://postgres:1@postgres:5432/postgres?sslmode=disable" \
