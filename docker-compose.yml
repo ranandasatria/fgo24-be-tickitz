@@ -1,19 +1,22 @@
 services:
   app:
-    build: .
+    image: ghcr.io/ranandasatria/fgo24-be-tickitz:latest
+    env_file:
+      - .env
+    ports:
+      - "9303:8888"
     depends_on:
       - postgres
       - redis
     networks:
       - netapp
-    ports:
-      - 8888:8888
   postgres:
     image: postgres
     environment:
-      - POSTGRES_PASSWORD=1
+      POSTGRES_PASSWORD: 1
     volumes:
       - data_postgres:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - netapp
 
@@ -23,22 +26,7 @@ services:
       - data_redis:/data
     networks:
       - netapp
-
-  migrate:
-    image: migrate/migrate
-    volumes:
-      - ./migrations:/migrations
-    networks:
-      - netapp
-    depends_on:
-      - postgres
-    command:
-      [
-        "-path=/migrations",
-        "-database=postgres://postgres:1@postgres:5432/postgres?sslmode=disable",
-        "up"
-      ]
-
+      
 volumes:
   data_postgres: {}
   data_redis: {}
