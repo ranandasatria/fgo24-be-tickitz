@@ -14,7 +14,7 @@ import (
 // @title Be-Tickitz API
 // @version 1.0
 // @description This is a simple movie ticketing API
-// @host 146.190.102.54:9303
+// @host localhost:8888
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -27,10 +27,17 @@ func main() {
 		ctx.JSON(http.StatusOK, gin.H{"Message": "Backend is running"})
 	})
 
+	// r.Use(cors.New(cors.Config{
+	// 	AllowOrigins: []string{"*"},
+	// 	AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+	// 	AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+	// }))
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		AllowOrigins:  []string{"http://localhost:5173"},
+		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders: []string{"Content-Length"},
 	}))
 
 	routers.CombineRouter(r)
