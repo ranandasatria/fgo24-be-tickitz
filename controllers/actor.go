@@ -17,7 +17,7 @@ import (
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param request body dto.Actor true "Actor data"
+// @Param request body dto.Actor true "Actors data"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 403 {object} utils.Response

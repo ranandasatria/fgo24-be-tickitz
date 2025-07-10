@@ -36,10 +36,23 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	existingUser, err := models.FindOneUserByEmail(input.Email)
+	if err == nil && existingUser.ID != 0{
+		c.JSON(http.StatusConflict, utils.Response{
+			Success: false,
+			Message: "Email is already registered",
+		})
+		return
+	}
+
+
 	user := models.User{
 		Email:    input.Email,
 		Password: input.Password,
 	}
+
+
+
 
 	createdUser, err := models.Register(user)
 	if err != nil {

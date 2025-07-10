@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "146.190.102.54:9303",
+    "host": "localhost:8888",
     "basePath": "/",
     "paths": {
         "/actors": {
@@ -60,7 +60,7 @@
                 "summary": "Create actor",
                 "parameters": [
                     {
-                        "description": "Actor data",
+                        "description": "Actors data",
                         "name": "request",
                         "in": "body",
                         "required": true,
