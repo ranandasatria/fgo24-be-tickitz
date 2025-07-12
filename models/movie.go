@@ -18,6 +18,7 @@ type Movie struct {
 	Duration        int       `json:"durationMinutes" db:"duration_minutes"`
 	Image           string    `json:"image"`
 	HorizontalImage string    `json:"horizontalImage" db:"horizontal_image"`
+	GenreIDs        []int     `json:"genre_ids"`
 }
 
 func CreateMovie(input dto.Movie) (Movie, error) {
@@ -68,7 +69,6 @@ func CreateMovie(input dto.Movie) (Movie, error) {
       INSERT INTO movie_genres (id_movie, id_genre)
       VALUES ($1, $2)
     `, movie.ID, genreID)
-
 		if err != nil {
 			return Movie{}, fmt.Errorf("failed to insert genre: %v", err)
 		}
@@ -97,6 +97,10 @@ func CreateMovie(input dto.Movie) (Movie, error) {
 	if err := tx.Commit(context.Background()); err != nil {
 		return Movie{}, fmt.Errorf("failed to commit transaction: %v", err)
 	}
+
+	// Clear Redis cache
+	utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
+	utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
 
 	return movie, nil
 }
@@ -172,10 +176,10 @@ func GetMovieByID(id string) (dto.MovieDetail, error) {
 
 	var movie dto.MovieDetail
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
-		FROM movies
-		WHERE id = $1
-	`, id).Scan(
+    SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+    FROM movies
+    WHERE id = $1
+  `, id).Scan(
 		&movie.ID,
 		&movie.Title,
 		&movie.Description,
@@ -189,11 +193,11 @@ func GetMovieByID(id string) (dto.MovieDetail, error) {
 	}
 
 	rows, err := conn.Query(context.Background(), `
-		SELECT g.genre_name
-		FROM genres g
-		JOIN movie_genres mg ON g.id = mg.id_genre
-		WHERE mg.id_movie = $1
-	`, id)
+    SELECT g.genre_name
+    FROM genres g
+    JOIN movie_genres mg ON g.id = mg.id_genre
+    WHERE mg.id_movie = $1
+  `, id)
 	if err == nil {
 		for rows.Next() {
 			var name string
@@ -204,11 +208,11 @@ func GetMovieByID(id string) (dto.MovieDetail, error) {
 	}
 
 	rows, err = conn.Query(context.Background(), `
-		SELECT d.director_name
-		FROM directors d
-		JOIN movie_directors md ON d.id = md.id_director
-		WHERE md.id_movie = $1
-	`, id)
+    SELECT d.director_name
+    FROM directors d
+    JOIN movie_directors md ON d.id = md.id_director
+    WHERE md.id_movie = $1
+  `, id)
 	if err == nil {
 		for rows.Next() {
 			var name string
@@ -219,11 +223,11 @@ func GetMovieByID(id string) (dto.MovieDetail, error) {
 	}
 
 	rows, err = conn.Query(context.Background(), `
-		SELECT a.actor_name
-		FROM actors a
-		JOIN movie_casts mc ON a.id = mc.id_actor
-		WHERE mc.id_movie = $1
-	`, id)
+    SELECT a.actor_name
+    FROM actors a
+    JOIN movie_casts mc ON a.id = mc.id_actor
+    WHERE mc.id_movie = $1
+  `, id)
 	if err == nil {
 		for rows.Next() {
 			var name string
@@ -236,28 +240,105 @@ func GetMovieByID(id string) (dto.MovieDetail, error) {
 	return movie, nil
 }
 
-func GetNowShowing() ([]Movie, error) {
+func GetNowShowing(search string, genres []int, sort string, page int, limit int) ([]Movie, int, error) {
 	conn, err := utils.ConnectDB()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer conn.Release()
 
-	rows, err := conn.Query(context.Background(), `
-		SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
-		FROM movies
-		WHERE release_date < CURRENT_DATE
-		ORDER BY created_at DESC
-	`)
-	if err != nil {
-		return nil, err
+	// Query utama untuk movies
+	query := `
+    SELECT id, title, description, release_date, duration_minutes, image, horizontal_image
+    FROM movies
+    WHERE release_date <= NOW()
+  `
+	countQuery := `
+    SELECT COUNT(id)
+    FROM movies
+    WHERE release_date <= NOW()
+  `
+	params := []interface{}{}
+
+	if search != "" {
+		query += ` AND title ILIKE '%' || $1 || '%'`
+		countQuery += ` AND title ILIKE '%' || $1 || '%'`
+		params = append(params, search)
 	}
 
-	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
-	return movies, err
+	if len(genres) > 0 {
+		query += fmt.Sprintf(` AND id IN (
+      SELECT id_movie FROM movie_genres WHERE id_genre = ANY($%d)
+    )`, len(params)+1)
+		countQuery += fmt.Sprintf(` AND id IN (
+      SELECT id_movie FROM movie_genres WHERE id_genre = ANY($%d)
+    )`, len(params)+1)
+		params = append(params, genres)
+	}
+
+	if sort == "latest" {
+		query += ` ORDER BY release_date DESC`
+	} else if sort == "name-asc" {
+		query += ` ORDER BY title ASC`
+	} else if sort == "name-desc" {
+		query += ` ORDER BY title DESC`
+	} else {
+		query += ` ORDER BY id ASC`
+	}
+
+	if page > 0 && limit > 0 {
+		query += fmt.Sprintf(` OFFSET $%d LIMIT $%d`, len(params)+1, len(params)+2)
+		params = append(params, (page-1)*limit, limit)
+	}
+
+	// Hitung total rows
+	var totalRows int
+	err = conn.QueryRow(context.Background(), countQuery, params[:len(params)-2]...).Scan(&totalRows)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Ambil movies
+	rows, err := conn.Query(context.Background(), query, params...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var movies []Movie
+	for rows.Next() {
+		var m Movie
+		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.ReleaseDate, &m.Duration, &m.Image, &m.HorizontalImage)
+		if err != nil {
+			return nil, 0, err
+		}
+		movies = append(movies, m)
+	}
+
+	// Ambil genre_ids untuk setiap movie
+	for i, m := range movies {
+		var genreIDs []int
+		rows, err := conn.Query(context.Background(), `
+      SELECT id_genre
+      FROM movie_genres
+      WHERE id_movie = $1
+    `, m.ID)
+		if err == nil {
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err == nil {
+					genreIDs = append(genreIDs, id)
+				}
+			}
+			rows.Close()
+		}
+		movies[i].GenreIDs = genreIDs
+	}
+
+	return movies, totalRows, nil
 }
 
-func GetUpcoming() ([]dto.MovieUpcoming, error) {
+func GetUpcoming() ([]Movie, error) {
 	conn, err := utils.ConnectDB()
 	if err != nil {
 		return nil, err
@@ -265,16 +346,19 @@ func GetUpcoming() ([]dto.MovieUpcoming, error) {
 	defer conn.Release()
 
 	rows, err := conn.Query(context.Background(), `
-	SELECT title, release_date, image
-	FROM movies
-	WHERE release_date > CURRENT_DATE
-	ORDER BY created_at DESC
-	`)
+    SELECT m.id, m.title, m.description, m.release_date, m.duration_minutes, m.image, m.horizontal_image,
+           COALESCE(ARRAY_AGG(mg.id_genre) FILTER (WHERE mg.id_genre IS NOT NULL), '{}') as genre_ids
+    FROM movies m
+    LEFT JOIN movie_genres mg ON m.id = mg.id_movie
+    WHERE m.release_date > NOW()
+    GROUP BY m.id
+  `)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.MovieUpcoming])
+	movies, err := pgx.CollectRows(rows, pgx.RowToStructByName[Movie])
 	return movies, err
 }
 
@@ -286,6 +370,11 @@ func DeleteMovie(id string) error {
 	defer conn.Release()
 
 	_, err = conn.Exec(context.Background(), `DELETE FROM movies WHERE id = $1`, id)
+	if err == nil {
+		utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
+		utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
+		utils.RedisClient().Del(context.Background(), "/movies/"+id)
+	}
 	return err
 }
 
@@ -416,5 +505,11 @@ func UpdateMovie(id int, input dto.UpdateMovieInput) error {
 		}
 	}
 
-	return tx.Commit(context.Background())
+	err = tx.Commit(context.Background())
+	if err == nil {
+		utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
+		utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
+		utils.RedisClient().Del(context.Background(), fmt.Sprintf("/movies/%d", id))
+	}
+	return err
 }
