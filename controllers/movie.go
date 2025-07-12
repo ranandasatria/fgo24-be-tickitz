@@ -6,9 +6,13 @@ import (
 	"be-tickitz/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -168,7 +172,32 @@ func GetAllMovies(c *gin.Context) {
 // @Failure 404 {object} utils.Response
 // @Router /movies/{id} [get]
 func GetMovieByID(c *gin.Context) {
+	ctx := context.Background()
+
 	id := c.Param("id")
+	cacheKey := "/movies/" + id
+
+	err := utils.RedisClient().Ping(ctx).Err()
+	noredis := false
+	if err != nil {
+		log.Println("Redis unavailable:", err.Error())
+		noredis = true
+	}
+
+	if !noredis {
+		val, err := utils.RedisClient().Get(ctx, cacheKey).Result()
+		if err == nil {
+			var cached dto.MovieDetail
+			if err := json.Unmarshal([]byte(val), &cached); err == nil {
+				c.JSON(http.StatusOK, utils.Response{
+					Success: true,
+					Message: "Movie details (from Redis)",
+					Results: cached,
+				})
+				return
+			}
+		}
+	}
 
 	movie, err := models.GetMovieByID(id)
 	if err != nil {
@@ -180,6 +209,12 @@ func GetMovieByID(c *gin.Context) {
 		return
 	}
 
+	if !noredis {
+		if encoded, err := json.Marshal(movie); err == nil {
+			utils.RedisClient().Set(ctx, cacheKey, encoded, 0)
+		}
+	}
+
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Movie details",
@@ -189,15 +224,66 @@ func GetMovieByID(c *gin.Context) {
 
 // GetNowShowing godoc
 // @Summary Get now showing movies
-// @Description Retrieve list of currently showing movies
+// @Description Retrieve list of currently showing movies with search, genre filter, sort, and pagination
 // @Tags Movies
 // @Produce json
+// @Param search query string false "Search by title"
+// @Param genres query string false "Comma-separated genre IDs"
+// @Param sort query string false "Sort by: latest, name-asc, name-desc"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(12)
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /movies/now-showing [get]
 func GetNowShowing(c *gin.Context) {
-	movies, err := models.GetNowShowing()
+	ctx := context.Background()
+
+	search := c.DefaultQuery("search", "")
+	genresStr := c.DefaultQuery("genres", "")
+	sort := c.DefaultQuery("sort", "latest")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "12"))
+
+	genres := []int{}
+	if genresStr != "" {
+		for _, g := range strings.Split(genresStr, ",") {
+			if id, err := strconv.Atoi(g); err == nil {
+				genres = append(genres, id)
+			}
+		}
+	}
+
+	cacheKey := fmt.Sprintf("/movies/now-showing?search=%s&genres=%s&sort=%s&page=%d&limit=%d",
+		url.QueryEscape(search), url.QueryEscape(genresStr), sort, page, limit)
+
+	err := utils.RedisClient().Ping(ctx).Err()
+	if err == nil {
+		val, err := utils.RedisClient().Get(ctx, cacheKey).Result()
+		if err == nil {
+			var cached []models.Movie
+			if err := json.Unmarshal([]byte(val), &cached); err == nil {
+				var totalRows int
+				if totalStr, err := utils.RedisClient().Get(ctx, cacheKey+":total").Result(); err == nil {
+					totalRows, _ = strconv.Atoi(totalStr)
+				}
+				c.JSON(http.StatusOK, utils.Response{
+					Success: true,
+					Message: "Now showing (from Redis)",
+					Results: map[string]interface{}{
+						"movies": cached,
+						"total":  totalRows,
+					},
+				})
+				return
+			}
+		}
+	} else {
+		log.Println("Redis error:", err.Error())
+	}
+
+	movies, totalRows, err := models.GetNowShowing(search, genres, sort, page, limit)
 	if err != nil {
+		log.Println("Database error:", err.Error())
 		c.JSON(http.StatusInternalServerError, utils.Response{
 			Success: false,
 			Message: "Failed to fetch movies",
@@ -206,10 +292,26 @@ func GetNowShowing(c *gin.Context) {
 		return
 	}
 
+	if err == nil {
+		if encoded, err := json.Marshal(movies); err == nil {
+			err = utils.RedisClient().Set(ctx, cacheKey, encoded, 1*time.Hour).Err()
+			if err != nil {
+				log.Println("Failed to cache to Redis:", err.Error())
+			}
+			err = utils.RedisClient().Set(ctx, cacheKey+":total", totalRows, 1*time.Hour).Err()
+			if err != nil {
+				log.Println("Failed to cache total to Redis:", err.Error())
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, utils.Response{
 		Success: true,
 		Message: "Now showing",
-		Results: movies,
+		Results: map[string]interface{}{
+			"movies": movies,
+			"total":  totalRows,
+		},
 	})
 }
 
@@ -222,6 +324,32 @@ func GetNowShowing(c *gin.Context) {
 // @Failure 500 {object} utils.Response
 // @Router /movies/upcoming [get]
 func GetUpcoming(c *gin.Context) {
+	ctx := context.Background()
+
+	cacheKey := "/movies/upcoming"
+
+	err := utils.RedisClient().Ping(ctx).Err()
+	noredis := false
+	if err != nil {
+		log.Println("Redis unavailable:", err.Error())
+		noredis = true
+	}
+
+	if !noredis {
+		val, err := utils.RedisClient().Get(ctx, cacheKey).Result()
+		if err == nil {
+			var cached []models.Movie
+			if err := json.Unmarshal([]byte(val), &cached); err == nil {
+				c.JSON(http.StatusOK, utils.Response{
+					Success: true,
+					Message: "Upcoming movies (from Redis)",
+					Results: cached,
+				})
+				return
+			}
+		}
+	}
+
 	movies, err := models.GetUpcoming()
 	if err != nil {
 		log.Println(err.Error())
@@ -231,6 +359,12 @@ func GetUpcoming(c *gin.Context) {
 			Errors:  err.Error(),
 		})
 		return
+	}
+
+	if !noredis {
+		if encoded, err := json.Marshal(movies); err == nil {
+			utils.RedisClient().Set(ctx, cacheKey, encoded, 0)
+		}
 	}
 
 	c.JSON(http.StatusOK, utils.Response{
