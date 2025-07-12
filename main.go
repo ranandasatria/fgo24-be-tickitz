@@ -21,7 +21,7 @@ import (
 // @name Authorization
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"Message": "Backend is running"})
