@@ -17,3 +17,7 @@ func TransactionAdminRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.VerifyToken())
 	r.GET("", controllers.GetAllTransactions)
 }
+
+func CheckSeatsRouter(r *gin.RouterGroup){
+	r.GET("", controllers.CheckSeatAvailability)
+}
