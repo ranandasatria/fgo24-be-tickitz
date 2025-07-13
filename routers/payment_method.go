@@ -13,3 +13,8 @@ func adminPaymentMethod(r *gin.RouterGroup) {
 	r.GET("", controllers.GetAllPaymentMethod)
 	r.DELETE("/:id", controllers.DeletePaymentMethod)
 }
+
+func userPaymentMethod(r *gin.RouterGroup) {
+	r.GET("", controllers.GetAllPaymentMethod)
+}
+

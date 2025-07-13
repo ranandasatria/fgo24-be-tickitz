@@ -70,7 +70,7 @@ func CreatePaymentMethod(c *gin.Context) {
 // @Security BearerAuth
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /admin/payment-method [get]
+// @Router /payment-method [get]
 func GetAllPaymentMethod(c *gin.Context) {
   payment_method, err := models.GetAllPaymentMethod()
   if err != nil {

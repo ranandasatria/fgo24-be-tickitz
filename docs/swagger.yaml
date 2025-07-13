@@ -460,24 +460,6 @@ paths:
       tags:
       - Movies
   /admin/payment-method:
-    get:
-      description: Retrieve all payment method
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get all payment method
-      tags:
-      - Payment Method
     post:
       consumes:
       - application/json
@@ -600,6 +582,65 @@ paths:
       summary: Delete user by ID (admin only)
       tags:
       - Users
+  /check-seats:
+    get:
+      consumes:
+      - application/json
+      description: Check if seats are available for a movie show
+      parameters:
+      - description: Movie ID
+        in: query
+        name: movie_id
+        required: true
+        type: integer
+      - description: Show date (YYYY-MM-DD)
+        in: query
+        name: show_date
+        required: true
+        type: string
+      - description: Show time (HH:MM:SS)
+        in: query
+        name: show_time
+        required: true
+        type: string
+      - description: Location
+        in: query
+        name: location
+        required: true
+        type: string
+      - description: Cinema
+        in: query
+        name: cinema
+        required: true
+        type: string
+      - description: Seats (comma-separated)
+        in: query
+        name: seats
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Check seat availability
+      tags:
+      - Transactions
   /directors:
     get:
       description: Retrieve all directors
@@ -754,7 +795,31 @@ paths:
       - Movies
   /movies/now-showing:
     get:
-      description: Retrieve list of currently showing movies
+      description: Retrieve list of currently showing movies with search, genre filter,
+        sort, and pagination
+      parameters:
+      - description: Search by title
+        in: query
+        name: search
+        type: string
+      - description: Comma-separated genre IDs
+        in: query
+        name: genres
+        type: string
+      - description: 'Sort by: latest, name-asc, name-desc'
+        in: query
+        name: sort
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 12
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -786,6 +851,25 @@ paths:
       summary: Get upcoming movies
       tags:
       - Movies
+  /payment-method:
+    get:
+      description: Retrieve all payment method
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all payment method
+      tags:
+      - Payment Method
   /profile:
     get:
       produces:
@@ -950,7 +1034,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                results:
+                  type: integer
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -964,7 +1053,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: Create a new transaction
       tags:
