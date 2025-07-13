@@ -14,7 +14,6 @@ import (
 // @title Be-Tickitz API
 // @version 1.0
 // @description This is a simple movie ticketing API
-// @host 146.190.102.54:9303
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth
 // @in header

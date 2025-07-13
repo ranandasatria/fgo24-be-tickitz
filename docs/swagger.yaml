@@ -133,7 +133,6 @@ definitions:
       success:
         type: boolean
     type: object
-host: 146.190.102.54:9303
 info:
   contact: {}
   description: This is a simple movie ticketing API
