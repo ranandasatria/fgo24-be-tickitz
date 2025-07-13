@@ -98,9 +98,8 @@ func CreateMovie(input dto.Movie) (Movie, error) {
 		return Movie{}, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	// Clear Redis cache
-	utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
-	utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
+
+	utils.DeleteKeysByPrefix(context.Background(), "/movies")
 
 	return movie, nil
 }
@@ -371,9 +370,7 @@ func DeleteMovie(id string) error {
 
 	_, err = conn.Exec(context.Background(), `DELETE FROM movies WHERE id = $1`, id)
 	if err == nil {
-		utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
-		utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
-		utils.RedisClient().Del(context.Background(), "/movies/"+id)
+		utils.DeleteKeysByPrefix(context.Background(), "/movies")
 	}
 	return err
 }
@@ -507,9 +504,7 @@ func UpdateMovie(id int, input dto.UpdateMovieInput) error {
 
 	err = tx.Commit(context.Background())
 	if err == nil {
-		utils.RedisClient().Del(context.Background(), "/movies/now-showing*")
-		utils.RedisClient().Del(context.Background(), "/movies/upcoming*")
-		utils.RedisClient().Del(context.Background(), fmt.Sprintf("/movies/%d", id))
+		utils.DeleteKeysByPrefix(context.Background(), "/movies")
 	}
 	return err
 }
