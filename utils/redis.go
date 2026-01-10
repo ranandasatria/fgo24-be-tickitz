@@ -3,20 +3,23 @@ package utils
 import (
 	"os"
 	"strconv"
+	"sync"
 
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
+var redisClient *redis.Client
+var redisOnce sync.Once
+
 func RedisClient() redis.Client {
-	godotenv.Load()
-	addr := os.Getenv("RDADDRESS")
-	pass := os.Getenv("RDPASSWORD")
-	db, _ := strconv.Atoi(os.Getenv("RDDB"))
-	var RedisClient = redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: pass,
-		DB:       db,
+	redisOnce.Do(func() {
+		db, _ := strconv.Atoi(os.Getenv("RDDB"))
+
+		redisClient = redis.NewClient(&redis.Options{
+			Addr:     os.Getenv("RDADDRESS"),
+			Password: os.Getenv("RDPASSWORD"),
+			DB:       db,
+		})
 	})
-	return *RedisClient
+	return *redisClient
 }

@@ -1,3 +1,5 @@
 .env old
 .env
 tmp
+.Dockerfile
+.push-image-to-ghcr.yml

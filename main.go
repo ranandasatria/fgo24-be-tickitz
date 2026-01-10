@@ -2,7 +2,6 @@ package main
 
 import (
 	"be-tickitz/routers"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -18,29 +17,30 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-
 func main() {
+	// if os.Getenv("ENV") == "local" {
+	// 	godotenv.Load()
+	// }
+	_ = godotenv.Load()
 	r := gin.New()
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"Message": "Backend is running"})
 	})
 
-	// r.Use(cors.New(cors.Config{
-	// 	AllowOrigins: []string{"*"},
-	// 	AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-	// 	AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
-	// }))
-
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"*"},
-		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders: []string{"Content-Length"},
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
 
 	routers.CombineRouter(r)
 
-	godotenv.Load()
-	r.Run(fmt.Sprintf("0.0.0.0:%s", os.Getenv("APP_PORT")))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8888"
+	}
+
+	r.Run("0.0.0.0:" + port)
+
 }
